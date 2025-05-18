@@ -40,7 +40,12 @@ export class OrdinalService {
   ) {}
 
   getOrdinals = async (from = ''): Promise<PaginatedOrdinalsResponse> => {
+    if (!this.oneSatSPV || typeof this.oneSatSPV.search !== 'function') {
+      console.error('oneSatSPV or oneSatSPV.search is undefined in getOrdinals');
+      return { ordinals: [], from: undefined };
+    }
     const ordinals = await this.oneSatSPV.search(new TxoLookup('origin', 'type'), TxoSort.DESC, 50, from);
+    if (!ordinals || !ordinals.txos) return { ordinals: [], from: undefined };
     const mapped = ordinals.txos
       .filter(
         (o) =>

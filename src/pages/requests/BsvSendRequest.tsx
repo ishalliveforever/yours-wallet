@@ -10,7 +10,7 @@ import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTheme } from '../../hooks/useTheme';
 import { BSV_DECIMAL_CONVERSION } from '../../utils/constants';
 import { sleep } from '../../utils/sleep';
-import { sendMessage, removeWindow } from '../../utils/chromeHelpers';
+import { sendMessage } from '../../utils/chromeHelpers';
 import { SendBsv } from 'yours-wallet-provider';
 import { useServiceContext } from '../../hooks/useServiceContext';
 import { getErrorMessage, getTxFromRawTxFormat } from '../../utils/tools';
@@ -195,7 +195,6 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
 
   const clearRequest = async () => {
     await chromeStorageService.remove('sendBsvRequest');
-    if (popupId) removeWindow(popupId);
     window.location.reload();
   };
 

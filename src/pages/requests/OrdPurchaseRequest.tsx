@@ -10,7 +10,7 @@ import { Show } from '../../components/Show';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTheme } from '../../hooks/useTheme';
 import { useServiceContext } from '../../hooks/useServiceContext';
-import { removeWindow, sendMessage } from '../../utils/chromeHelpers';
+import { sendMessage } from '../../utils/chromeHelpers';
 import {
   BSV20_INDEX_FEE,
   BSV_DECIMAL_CONVERSION,
@@ -120,7 +120,6 @@ export const OrdPurchaseRequest = (props: OrdPurchaseRequestProps) => {
 
   const clearRequest = async () => {
     await chromeStorageService.remove('purchaseOrdinalRequest');
-    if (popupId) removeWindow(popupId);
     window.location.reload();
   };
 

@@ -10,7 +10,7 @@ import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTheme } from '../../hooks/useTheme';
 import { BSV_DECIMAL_CONVERSION } from '../../utils/constants';
 import { sleep } from '../../utils/sleep';
-import { sendMessage, removeWindow } from '../../utils/chromeHelpers';
+import { sendMessage } from '../../utils/chromeHelpers';
 import { useServiceContext } from '../../hooks/useServiceContext';
 import { getTxFromRawTxFormat } from '../../utils/tools';
 import { IndexContext } from 'spv-store';
@@ -160,7 +160,6 @@ export const BroadcastRequest = (props: BroadcastRequestProps) => {
 
   const clearRequest = async () => {
     await chromeStorageService.remove('broadcastRequest');
-    if (popupId) removeWindow(popupId);
     window.location.reload();
   };
 

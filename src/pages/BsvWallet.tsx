@@ -11,7 +11,6 @@ import {
   ConfirmContent,
   FormContainer,
   HeaderText,
-  MainContent,
   ReceiveContent,
   Text,
   Warning,
@@ -55,13 +54,43 @@ import { SendBsv20View } from '../components/SendBsv20View';
 import { FaucetButton } from '../components/FaucetButton';
 import { TxHistory } from '../components/TxHistory';
 
+const MainContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100vw;
+  min-height: 100vh;
+  background: ${({ theme }) => theme.color.global.walletBackground};
+  box-sizing: border-box;
+  padding-bottom: 5.5rem; // for bottom nav
+  @media (max-width: 600px) {
+    min-height: 100vh;
+    max-width: 100vw;
+    padding-bottom: 3.5rem;
+    padding-top: 0.5rem;
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+`;
+
 const MiddleContainer = styled.div<WhiteLabelTheme>`
   display: flex;
   align-items: center;
   justify-content: center;
   flex-direction: column;
   width: 100%;
-  padding: 3.5rem 1rem 2.75rem 1rem;
+  max-width: 340px;
+  margin: 0 auto;
+  padding: 1.25rem 0.25rem 1.25rem 0.25rem;
+  background: ${({ theme }) => theme.color.global.walletBackground};
+  border-radius: 1rem;
+  @media (max-width: 600px) {
+    border-radius: 0;
+    padding: 0.5rem 0.1rem 0.5rem 0.1rem;
+    margin: 0;
+    width: 100vw;
+    max-width: 100vw;
+  }
 `;
 
 const ProfileImage = styled.img`
@@ -79,6 +108,16 @@ const ProfileImage = styled.img`
 const BalanceContainer = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
+  margin: 1.25rem 0 0.5rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #222;
+  @media (max-width: 600px) {
+    margin: 0.75rem 0 0.25rem 0;
+    font-size: 1.25rem;
+  }
 `;
 
 const Icon = styled.img<{ size?: string }>`
@@ -92,7 +131,15 @@ const CopyAddressWrapper = styled.div`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  margin: 2rem 0;
+  margin: 1.5rem 0 1.5rem 0;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  background: #f7f7f7;
+  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, 0.04);
+  transition: background 0.2s;
+  &:hover {
+    background: #ececec;
+  }
 `;
 
 const StyledCopy = styled.img`
@@ -303,7 +350,7 @@ export const BsvWallet = (props: BsvWalletProps) => {
       const obj = await chromeStorageService.getAndSetStorage();
       obj && !obj.hasUpgradedToSPV ? setShowUpgrade(true) : setShowUpgrade(false);
       if (obj?.selectedAccount) {
-        oneSatSPV.stores.txos?.syncTxLogs();
+        oneSatSPV?.stores?.txos?.syncTxLogs();
         if (!ordinalService) return;
         await getAndSetAccountAndBsv20s();
       }
@@ -635,14 +682,21 @@ export const BsvWallet = (props: BsvWalletProps) => {
   const main = (
     <MainContent>
       <MiddleContainer theme={theme}>
-        <Show when={socialProfile.avatar !== HOSTED_YOURS_IMAGE}>
-          <ProfileImage src={socialProfile.avatar} />
+        <Show when={socialProfile.avatar !== HOSTED_YOURS_IMAGE || socialProfile.displayName !== 'Anonymous'}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
+            {socialProfile.avatar !== HOSTED_YOURS_IMAGE && (
+              <ProfileImage src={socialProfile.avatar} />
+            )}
+            <span style={{ fontWeight: 700, fontSize: '1.1rem', color: theme.color.global.contrast }}>
+              {socialProfile.displayName}
+            </span>
+          </div>
         </Show>
         <HeaderText
           title={'Sync Transactions'}
           style={{ fontSize: '2rem', cursor: 'pointer' }}
           theme={theme}
-          onClick={() => oneSatSPV.stores.txos?.syncTxLogs()}
+          onClick={() => oneSatSPV?.stores?.txos?.syncTxLogs()}
         >
           {formatUSD(bsvBalance * exchangeRate)}
         </HeaderText>

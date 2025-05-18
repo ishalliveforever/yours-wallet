@@ -1,6 +1,3 @@
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-declare const chrome: any;
-
 import { Utils } from '@bsv/sdk';
 import { NetWork } from 'yours-wallet-provider';
 import { YoursEventName } from '../inject';
@@ -21,50 +18,66 @@ export class ChromeStorageService {
 
   private set = async (obj: Partial<ChromeStorageObject>): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-      chrome.storage.local.set(obj, async () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          await this.getAndSetStorage();
-          resolve();
-        }
-      });
+      try {
+        // chrome.storage.local.set(obj, () => {
+        //   this.getAndSetStorage()
+        //     .then(() => resolve())
+        //     .catch(reject);
+        // });
+        const current = JSON.parse(localStorage.getItem('yours_wallet') || '{}');
+        const merged = { ...current, ...obj };
+        localStorage.setItem('yours_wallet', JSON.stringify(merged));
+        this.getAndSetStorage()
+          .then(() => resolve())
+          .catch(reject);
+      } catch (e) {
+        reject(e);
+      }
     });
   };
 
   private get = async (keyOrKeys: string | string[] | null): Promise<Partial<ChromeStorageObject>> => {
     return new Promise<Partial<ChromeStorageObject>>((resolve, reject) => {
-      chrome.storage.local.get(keyOrKeys, (result: Partial<ChromeStorageObject>) => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          resolve(result);
-        }
-      });
+      try {
+        const all = JSON.parse(localStorage.getItem('yours_wallet') || '{}');
+        if (!keyOrKeys) return resolve(all);
+        if (typeof keyOrKeys === 'string') return resolve({ [keyOrKeys]: all[keyOrKeys as keyof ChromeStorageObject] });
+        const result: Partial<ChromeStorageObject> = {};
+        (keyOrKeys as string[]).forEach(k => {
+          (result as any)[k] = all[k as keyof ChromeStorageObject];
+        });
+        resolve(result);
+      } catch (e) {
+        reject(e);
+      }
     });
   };
 
   remove = async (keyOrKeys: string | string[]): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-      chrome.storage.local.remove(keyOrKeys, () => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
+      try {
+        const all = JSON.parse(localStorage.getItem('yours_wallet') || '{}');
+        if (typeof keyOrKeys === 'string') {
+          delete all[keyOrKeys];
         } else {
-          resolve();
+          keyOrKeys.forEach(k => { delete all[k]; });
         }
-      });
+        localStorage.setItem('yours_wallet', JSON.stringify(all));
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
     });
   };
 
   clear = async (): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
-      chrome.storage.local.clear(() => {
-        if (chrome.runtime.lastError) {
-          reject(chrome.runtime.lastError);
-        } else {
-          resolve();
-        }
-      });
+      try {
+        localStorage.removeItem('yours_wallet');
+        resolve();
+      } catch (e) {
+        reject(e);
+      }
     });
   };
 

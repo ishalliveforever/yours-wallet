@@ -9,7 +9,7 @@ import { useBottomMenu } from '../../hooks/useBottomMenu';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTheme } from '../../hooks/useTheme';
 import { useServiceContext } from '../../hooks/useServiceContext';
-import { removeWindow, sendMessage } from '../../utils/chromeHelpers';
+import { sendMessage } from '../../utils/chromeHelpers';
 import { encryptUsingPrivKey } from '../../utils/crypto';
 import { getPrivateKeyFromTag, Keys } from '../../utils/keys';
 import { sleep } from '../../utils/sleep';
@@ -104,7 +104,6 @@ export const EncryptRequest = (props: EncryptRequestProps) => {
 
   const clearRequest = async () => {
     await chromeStorageService.remove('encryptRequest');
-    if (popupId) removeWindow(popupId);
     window.location.reload();
   };
 

@@ -31,6 +31,8 @@ export const useSocialProfile = (chromeStorageService: ChromeStorageService) => 
     const update: Partial<ChromeStorageObject['accounts']> = {
       [account.addresses.identityAddress]: {
         ...account,
+        name: profile.displayName, // update root-level name
+        icon: profile.avatar,      // update root-level icon
         settings: {
           ...accountSettings,
           socialProfile: profile,
@@ -39,6 +41,8 @@ export const useSocialProfile = (chromeStorageService: ChromeStorageService) => 
     };
     await chromeStorageService.updateNested(key, update);
     setSocialProfile(profile);
+    // Notify other components of the update
+    window.dispatchEvent(new CustomEvent('socialProfileUpdated'));
   };
 
   return {

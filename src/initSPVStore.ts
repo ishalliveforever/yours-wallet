@@ -141,17 +141,85 @@ const registerEventListeners = async (oneSatSPV: OneSatWebSPV, selectedAccount: 
     } catch (e) {}
   });
 
+  // Debug: log all known events emitted by oneSatSPV.events
+  const debugEvents = [
+    'queueStats',
+    'importing',
+    'fetchingTx',
+    'syncedBlockHeight',
+    'synced',
+    'syncing',
+    'error',
+    'ready',
+    'block',
+    'blockHeight',
+    'blockSynced',
+    'blockProcessed',
+    'blockHeader',
+    'blockHeaders',
+    'blockTip',
+    'blockchainProgress',
+    'progress',
+    'walletSynced',
+    'walletSyncing',
+    'walletReady',
+    'walletError',
+    'walletBlock',
+    'walletBlockSynced',
+    'walletBlockProcessed',
+    'walletBlockHeader',
+    'walletBlockHeaders',
+    'walletBlockTip',
+    'walletBlockchainProgress',
+    'walletProgress',
+    // add more if needed
+  ];
+  debugEvents.forEach(eventName => {
+    oneSatSPV.events.on(eventName, (...args: any[]) => {
+      console.log(`[initSPVStore] oneSatSPV.events emitted: ${eventName}`, ...args);
+    });
+  });
+
   if (startSync) {
-    const tip = await oneSatSPV.getChaintip();
-    oneSatSPV.events.on('syncedBlockHeight', (lastHeight: number) => {
+    oneSatSPV.events.on('syncedBlockHeight', async (lastHeight: number) => {
+      console.log('[initSPVStore] syncedBlockHeight event fired:', lastHeight);
       try {
+        const tip = await oneSatSPV.getChaintip();
         const message: BlockHeightTrackerMessage = {
           action: YoursEventName.BLOCK_HEIGHT_UPDATE,
-          data: { currentHeight: tip?.height || 0, lastHeight },
+          data: { currentHeight: tip?.height || 0, lastHeight, syncing: false },
         };
         selectedAccount && sendMessage(message);
         // eslint-disable-next-line no-empty
       } catch (error) {}
     });
+
+    // --- POLLING SYNC PROGRESS FOR UI ---
+    let syncInterval: NodeJS.Timeout | null = null;
+    const pollSyncProgress = async () => {
+      try {
+        const tip = await oneSatSPV.getChaintip();
+        const synced = await oneSatSPV.getSyncedBlock?.();
+        // Use only the height comparison for syncing
+        const isSyncing = synced && tip && synced.height < tip.height;
+        console.log('[initSPVStore][pollSyncProgress] tip:', tip?.height, 'synced:', synced?.height, 'isSyncing:', isSyncing);
+        if (tip && synced) {
+          const message: BlockHeightTrackerMessage = {
+            action: YoursEventName.BLOCK_HEIGHT_UPDATE,
+            data: { currentHeight: tip.height, lastHeight: synced.height, syncing: !!isSyncing },
+          };
+          sendMessage(message);
+          // Stop polling if fully synced and not actively syncing
+          if (synced.height >= tip.height && !isSyncing) {
+            if (syncInterval) clearInterval(syncInterval);
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    };
+    syncInterval = setInterval(pollSyncProgress, 2000);
+    pollSyncProgress();
+    // --- END POLLING ---
   }
 };

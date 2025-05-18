@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { YoursEventName } from '../inject';
 import { useTheme } from './useTheme';
+import { BlockHeightTrackerMessage } from './useBlockHeightTracker';
 
 export type QueueTrackerMessage = {
   action: YoursEventName.QUEUE_STATUS_UPDATE;
@@ -91,11 +92,24 @@ export const useQueueTracker = () => {
       }
     };
 
+    // Listen for block sync events to force isSyncing false when block sync is done
+    const handleBlockHeightUpdate = (event: CustomEvent<BlockHeightTrackerMessage>) => {
+      const message = event.detail;
+      if (message.action === YoursEventName.BLOCK_HEIGHT_UPDATE) {
+        const percent = Math.round((message.data.lastHeight / message.data.currentHeight) * 100);
+        if (!message.data.syncing && percent === 100) {
+          setIsSyncing(false);
+        }
+      }
+    };
+
+    window.addEventListener('yours-wallet-message', handleBlockHeightUpdate as EventListener);
     // Listen for messages from the background script
-    chrome.runtime.onMessage.addListener(handleQueueStatusUpdate);
+    // In web/mobile, this is a no-op or could use a custom event system if needed
+    // chrome.runtime.onMessage.addListener(handleQueueStatusUpdate);
 
     return () => {
-      chrome.runtime.onMessage.removeListener(handleQueueStatusUpdate);
+      // chrome.runtime.onMessage.removeListener(handleQueueStatusUpdate);
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
@@ -105,6 +119,7 @@ export const useQueueTracker = () => {
       if (twoSecondsTimeoutRef.current) {
         clearTimeout(twoSecondsTimeoutRef.current);
       }
+      window.removeEventListener('yours-wallet-message', handleBlockHeightUpdate as EventListener);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

@@ -118,7 +118,7 @@ type DecisionType = 'sign-out' | 'export-master-backup' | 'export-keys' | 'expor
 export const Settings = () => {
   const { theme } = useTheme();
   const { addSnackbar } = useSnackbar();
-  const { query, handleSelect } = useBottomMenu();
+  const { query, handleSelect, showMenu } = useBottomMenu();
   const [showSpeedBump, setShowSpeedBump] = useState(false);
   const { chromeStorageService, keysService, lockWallet, oneSatSPV } = useServiceContext();
   const [page, setPage] = useState<SettingsPage>(query === 'manage-accounts' ? 'manage-accounts' : 'main');
@@ -157,6 +157,10 @@ export const Settings = () => {
     getWhitelist();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    showMenu();
+  }, [showMenu]);
 
   const handleRemoveDomain = async (domain: string) => {
     const newList = connectedApps.filter((app) => app.domain !== domain);
@@ -263,10 +267,9 @@ export const Settings = () => {
   };
 
   useEffect(() => {
-    if (!socialProfile) return;
     setEnteredSocialDisplayName(socialProfile.displayName);
     setEnteredSocialAvatar(socialProfile.avatar);
-  }, [socialProfile]);
+  }, [socialProfile, page]); // Add 'page' as a dependency to re-sync when returning to the social profile page
 
   const exportKeys = async (password: string) => {
     const keys = await keysService.retrieveKeys(password);
@@ -432,7 +435,7 @@ export const Settings = () => {
   };
 
   const updateSpends = () => {
-    oneSatSPV.stores.txos?.refreshSpends();
+    oneSatSPV?.stores?.txos?.refreshSpends();
     addSnackbar('Updating spends in the background...', 'info');
   };
 

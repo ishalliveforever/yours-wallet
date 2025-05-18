@@ -42,6 +42,11 @@ export const QueueBanner = () => {
     }, 1000);
   }, []);
 
+  // Debug log for banner state
+  useEffect(() => {
+    console.log('[QueueBanner] isSyncing:', isSyncing, 'showQueueBanner:', showQueueBanner, 'queueLength:', queueLength, 'isInitializing:', isInitializing);
+  }, [isSyncing, showQueueBanner, queueLength, isInitializing]);
+
   useEffect(() => {
     if (queueLength || (importName && importName !== 'Wallet')) {
       localStorage.removeItem('walletImporting');
@@ -58,7 +63,7 @@ export const QueueBanner = () => {
   }, [isSyncing, showQueueBanner]);
 
   return (
-    <Show when={!!keysService?.bsvAddress && (isInitializing || showQueueBanner)}>
+    <Show when={!!keysService?.bsvAddress && isSyncing}>
       {theme && (
         <Banner theme={theme} $isSyncing={isSyncing}>
           <Show when={isSyncing}>

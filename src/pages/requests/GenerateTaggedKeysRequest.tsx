@@ -8,7 +8,7 @@ import { Show } from '../../components/Show';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTheme } from '../../hooks/useTheme';
 import { useServiceContext } from '../../hooks/useServiceContext';
-import { removeWindow, sendMessage } from '../../utils/chromeHelpers';
+import { sendMessage } from '../../utils/chromeHelpers';
 import { encryptUsingPrivKey } from '../../utils/crypto';
 import { truncate } from '../../utils/format';
 import { getPrivateKeyFromTag, getTaggedDerivationKeys, Keys } from '../../utils/keys';
@@ -189,7 +189,6 @@ export const GenerateTaggedKeysRequest = (props: GenerateTaggedKeysRequestProps)
 
   const clearRequest = async () => {
     await chromeStorageService.remove('generateTaggedKeysRequest');
-    if (popupId) removeWindow(popupId);
     window.location.reload();
   };
 

@@ -12,7 +12,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { GENERIC_TOKEN_ICON } from '../../utils/constants';
 import { truncate } from '../../utils/format';
 import { sleep } from '../../utils/sleep';
-import { sendMessage, removeWindow } from '../../utils/chromeHelpers';
+import { sendMessage } from '../../utils/chromeHelpers';
 import { SendBsv20 } from 'yours-wallet-provider';
 import { useServiceContext } from '../../hooks/useServiceContext';
 import { normalize } from '../../utils/ordi';
@@ -127,7 +127,6 @@ export const Bsv20SendRequest = (props: Bsv20SendRequestProps) => {
 
   const clearRequest = async () => {
     await chromeStorageService.remove('sendBsv20Request');
-    if (popupId) removeWindow(popupId);
     window.location.reload();
   };
 

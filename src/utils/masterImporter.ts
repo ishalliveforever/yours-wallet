@@ -92,7 +92,7 @@ export const restoreMasterFromZip = async (
           });
           count++;
         }
-        await spvWallet.stores.txos?.storage.setState('lastSync', (maxHeight * 1e9).toString());
+        await spvWallet?.stores?.txos?.storage.setState('lastSync', (maxHeight * 1e9).toString());
       }
 
       if (txLogFiles.length > 0) {

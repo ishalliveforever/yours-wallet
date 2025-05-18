@@ -1,5 +1,5 @@
 import { ReactNode, useCallback, useEffect, useState } from 'react';
-import { oneSatSPVPromise } from '../../background';
+import { oneSatSPVPromise } from '../../oneSatSPVPromise';
 import { BsvService } from '../../services/Bsv.service';
 import { ChromeStorageService } from '../../services/ChromeStorage.service';
 import { ContractService } from '../../services/Contract.service';

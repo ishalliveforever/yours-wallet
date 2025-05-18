@@ -11,7 +11,7 @@ import { Show } from '../../components/Show';
 import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTheme } from '../../hooks/useTheme';
 import { useServiceContext } from '../../hooks/useServiceContext';
-import { removeWindow, sendMessage } from '../../utils/chromeHelpers';
+import { sendMessage } from '../../utils/chromeHelpers';
 import { truncate } from '../../utils/format';
 import { sleep } from '../../utils/sleep';
 import { useBottomMenu } from '../../hooks/useBottomMenu';
@@ -84,7 +84,6 @@ export const OrdTransferRequest = (props: OrdTransferRequestProps) => {
 
   const clearRequest = async () => {
     await chromeStorageService.remove('transferOrdinalRequest');
-    if (popupId) removeWindow(popupId);
     window.location.reload();
   };
 

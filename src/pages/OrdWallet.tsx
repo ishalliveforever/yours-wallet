@@ -20,6 +20,7 @@ import { WhiteLabelTheme } from '../theme.types';
 import { getErrorMessage } from '../utils/tools';
 import { useIntersectionObserver } from '../hooks/useIntersectObserver';
 import { truncate } from '../utils/format';
+import { useBottomMenu } from '../hooks/useBottomMenu';
 
 type Addresses = Record<string, string>;
 
@@ -160,6 +161,7 @@ export const OrdWallet = () => {
   const [addresses, setAddresses] = useState<Addresses>({});
   const [addressErrors, setAddressErrors] = useState<Addresses>({});
   const [commonAddress, setCommonAddress] = useState('');
+  const { showMenu } = useBottomMenu();
 
   const toggleOrdinalSelection = (ord: OrdinalType) => {
     const isSelected = selectedOrdinals.some((selected) => selected.outpoint === ord.outpoint);
@@ -230,6 +232,10 @@ export const OrdWallet = () => {
     loadOrdinals();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    showMenu();
+  }, [showMenu]);
 
   const resetSendState = () => {
     setPasswordConfirm('');

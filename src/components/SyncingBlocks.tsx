@@ -6,52 +6,47 @@ import { styled } from 'styled-components';
 import { WhiteLabelTheme } from '../theme.types';
 import { YoursIcon } from './YoursIcon';
 
-const Container = styled.div<WhiteLabelTheme>`
+const FloatingContainer = styled.div<WhiteLabelTheme>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  z-index: 1000;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  background-color: ${({ theme }) => theme.color.global.walletBackground};
-  z-index: 1000;
-  position: absolute;
+  justify-content: flex-start;
+  background: ${({ theme }) => theme.color.global.walletBackground};
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  padding: 0.5rem 1rem;
+
+  @media (max-width: 600px) {
+    padding: 0.25rem 0.5rem;
+  }
 `;
 
 const Title = styled.h1<WhiteLabelTheme>`
   text-align: center;
   width: 100%;
   color: ${({ theme }) => theme.color.global.contrast};
-  margin: 0 0 1rem 0;
+  margin: 1.5rem 0 1rem 0;
+  font-size: 1.5rem;
+
+  @media (max-width: 600px) {
+    margin: 1rem 0 0.5rem 0;
+    font-size: 1.15rem;
+  }
 `;
 
 const Description = styled.p<WhiteLabelTheme>`
   text-align: center;
-  width: 80%;
-  margin: -0.5rem 0 1rem 0;
+  width: 90%;
+  margin: 0 0 1rem 0;
   color: ${({ theme }) => theme.color.global.gray};
+  font-size: 1rem;
+
+  @media (max-width: 600px) {
+    font-size: 0.95rem;
+    margin: 0 0 0.5rem 0;
+  }
 `;
-
-export const SyncingBlocks = () => {
-  const { theme } = useTheme();
-  const { percentCompleted, showSyncPage } = useBlockHeightTracker();
-
-  return (
-    <Show when={showSyncPage}>
-      {percentCompleted !== 100 && (
-        <Container theme={theme}>
-          <YoursIcon width="4rem" />
-          <Title theme={theme}>Syncing Blocks...</Title>
-          <Description theme={theme}>Yours SPV Wallet will be ready to use once this process is complete.</Description>
-          <ProgressBar
-            completed={percentCompleted}
-            bgColor={theme.color.component.progressBar}
-            baseBgColor={theme.color.component.progressBarTrack}
-            height="16px"
-            width="80vw"
-          />
-        </Container>
-      )}
-    </Show>
-  );
-};

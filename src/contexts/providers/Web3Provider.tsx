@@ -77,13 +77,15 @@ export const Web3RequestProvider: React.FC<{ children: ReactNode }> = ({ childre
       default:
         break;
     }
-    await chrome.storage.local.remove(type);
-    chrome.storage.local.get(async ({ popupWindowId }) => {
-      if (popupWindowId) {
-        await chrome.windows.remove(popupWindowId);
-        await chrome.storage.local.remove('popupWindowId');
-      }
-    });
+    await ChromeStorageService.prototype.remove(type);
+    const chromeStorageService = new ChromeStorageService();
+    await chromeStorageService.remove(type);
+    const storage = await chromeStorageService.getAndSetStorage();
+    const popupWindowId = storage?.popupWindowId;
+    if (popupWindowId) {
+      setPopupId(undefined);
+      await chromeStorageService.remove('popupWindowId');
+    }
   };
 
   const handleRequestStates = async (result: Partial<ChromeStorageObject>) => {

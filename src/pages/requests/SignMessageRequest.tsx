@@ -12,7 +12,7 @@ import { useTheme } from '../../hooks/useTheme';
 import { useServiceContext } from '../../hooks/useServiceContext';
 import { WhiteLabelTheme } from '../../theme.types';
 import { sleep } from '../../utils/sleep';
-import { sendMessage, removeWindow } from '../../utils/chromeHelpers';
+import { sendMessage } from '../../utils/chromeHelpers';
 import { getErrorMessage } from '../../utils/tools';
 
 const RequestDetailsContainer = styled.div<WhiteLabelTheme>`
@@ -97,7 +97,6 @@ export const SignMessageRequest = (props: SignMessageRequestProps) => {
 
   const clearRequest = async () => {
     await chromeStorageService.remove('signMessageRequest');
-    if (popupId) removeWindow(popupId);
     window.location.reload();
   };
 

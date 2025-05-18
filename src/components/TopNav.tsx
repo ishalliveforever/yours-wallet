@@ -118,9 +118,21 @@ export const TopNav = () => {
   const navigate = useNavigate();
   const { addSnackbar } = useSnackbar();
   const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [accounts, setAccounts] = useState(() => chromeStorageService.getAllAccounts());
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const toggleRef = useRef<HTMLDivElement | null>(null);
   const accountObj = chromeStorageService.getCurrentAccountObject();
+
+  // Listen for socialProfileUpdated event to refresh accounts
+  useEffect(() => {
+    const handleProfileUpdate = () => {
+      setAccounts(chromeStorageService.getAllAccounts());
+    };
+    window.addEventListener('socialProfileUpdated', handleProfileUpdate);
+    return () => {
+      window.removeEventListener('socialProfileUpdated', handleProfileUpdate);
+    };
+  }, []);
 
   const handleCopyToClipboard = (bsvAddress: string) => {
     navigator.clipboard.writeText(bsvAddress).then(() => {
@@ -190,7 +202,7 @@ export const TopNav = () => {
         </FlexContainer>
         {dropdownVisible && (
           <Dropdown theme={theme} ref={dropdownRef}>
-            {chromeStorageService.getAllAccounts().map((account) => (
+            {accounts.map((account) => (
               <DropdownItem
                 key={account.addresses.identityAddress}
                 theme={theme}

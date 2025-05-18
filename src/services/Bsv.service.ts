@@ -82,8 +82,12 @@ export class BsvService {
   };
 
   getLockedTxos = async () => {
+    if (!this.oneSatSPV || typeof this.oneSatSPV.search !== 'function') {
+      console.error('oneSatSPV or oneSatSPV.search is undefined in getLockedTxos');
+      return [];
+    }
     const lockTxos = await this.oneSatSPV.search(new TxoLookup('lock'));
-    return lockTxos.txos.filter((txo) => !txo.data.insc);
+    return lockTxos?.txos?.filter((txo) => !txo.data.insc) || [];
   };
 
   rate = async () => {
@@ -404,8 +408,12 @@ export class BsvService {
   };
 
   fundingTxos = async () => {
+    if (!this.oneSatSPV || typeof this.oneSatSPV.search !== 'function') {
+      console.error('oneSatSPV or oneSatSPV.search is undefined in fundingTxos');
+      return [];
+    }
     const results = await this.oneSatSPV.search(new TxoLookup('fund'), TxoSort.ASC, 0);
-    return results.txos;
+    return results?.txos || [];
   };
 
   fundRawTx = async (rawtx: string, password: string): Promise<FundRawTxResponse> => {

@@ -11,7 +11,7 @@ import { useSnackbar } from '../../hooks/useSnackbar';
 import { useTheme } from '../../hooks/useTheme';
 import { formatNumberWithCommasAndDecimals, truncate } from '../../utils/format';
 import { sleep } from '../../utils/sleep';
-import { sendMessage, removeWindow } from '../../utils/chromeHelpers';
+import { sendMessage } from '../../utils/chromeHelpers';
 import { SendMNEE } from 'yours-wallet-provider';
 import { useServiceContext } from '../../hooks/useServiceContext';
 import { getErrorMessage } from '../../utils/tools';
@@ -120,7 +120,6 @@ export const MNEESendRequest = (props: MNEESendRequestProps) => {
 
   const clearRequest = async () => {
     await chromeStorageService.remove('sendMNEERequest');
-    if (popupId) removeWindow(popupId);
     window.location.reload();
   };
 

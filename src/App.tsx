@@ -31,8 +31,6 @@ import { WhitelistedApp } from './inject';
 import { PageLoader } from './components/PageLoader';
 import { useServiceContext } from './hooks/useServiceContext';
 import { useWeb3RequestContext } from './hooks/useWeb3RequestContext';
-import { QueueBanner } from './components/QueueBanner';
-import { SyncingBlocks } from './components/SyncingBlocks';
 import { MasterRestore } from './pages/onboarding/MasterRestore';
 import { Bsv20SendRequest } from './pages/requests/Bsv20SendRequest';
 import { BlockHeightProvider } from './contexts/providers/BlockHeightProvider';
@@ -45,21 +43,54 @@ const MainContainer = styled.div<WhiteLabelTheme & { $isMobile?: boolean }>`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: ${({ $isMobile }) => ($isMobile ? '100vw' : '24.5rem')};
-  height: ${({ $isMobile }) => ($isMobile ? '100vh' : '33.75rem')};
+  min-height: 100vh;
+  min-width: 100vw;
+  width: 100vw;
+  height: 100vh;
   position: relative;
   padding: 0;
   background-color: ${({ theme }) => theme.color.global.walletBackground};
+  overflow: hidden;
+  @media (max-width: 600px) {
+    min-width: 100vw;
+    min-height: 100vh;
+    width: 100vw;
+    height: 100vh;
+    padding: 0;
+    overflow: auto;
+  }
 `;
 
 const Container = styled.div<WhiteLabelTheme>`
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
+  justify-content: flex-start;
+  width: 380px;
+  height: 600px;
+  max-width: 100vw;
+  max-height: 100vh;
+  min-width: 0;
+  min-height: 0;
   background-color: ${({ theme }) => theme.color.global.walletBackground};
   position: relative;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 32px 0 rgba(0, 0, 0, 0.1);
+  margin: 0 auto;
+  padding: 1rem 0.5rem 3.5rem 0.5rem;
+  box-sizing: border-box;
+  overflow: hidden;
+  @media (max-width: 600px) {
+    width: 360px;
+    height: 540px;
+    max-width: 100vw;
+    max-height: 100vh;
+    border-radius: 1rem;
+    margin: 0 auto;
+    padding: 0.5rem 0.25rem 2.5rem 0.25rem;
+    box-shadow: 0 2px 16px 0 rgba(0,0,0,0.08);
+    overflow: hidden;
+  }
 `;
 
 export const App = () => {
@@ -111,6 +142,15 @@ export const App = () => {
     }
   }, [transferOrdinalRequest, purchaseOrdinalRequest, menuContext]);
 
+  // Determine if a wallet/account exists
+  let hasWalletOrAccount = false;
+  try {
+    const current = chromeStorageService.getCurrentAccountObject();
+    hasWalletOrAccount = !!(current && current.account && current.account.encryptedKeys);
+  } catch (e) {
+    hasWalletOrAccount = false;
+  }
+
   if (!isReady) {
     return (
       <MainContainer $isMobile={isMobile} theme={theme}>
@@ -126,8 +166,7 @@ export const App = () => {
           <BottomMenuProvider network={chromeStorageService.getNetwork()}>
             <Container theme={theme}>
               <SnackbarProvider>
-                <QueueBanner />
-                <SyncingBlocks />
+                {/* <SyncingBlocks /> removed per user request */}
                 <Show when={!isLocked} whenFalseContent={<UnlockWallet onUnlock={handleUnlock} />}>
                   <Router>
                     <Routes>
