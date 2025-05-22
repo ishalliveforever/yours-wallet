@@ -102,6 +102,16 @@ export const App = () => {
   const { isMobile } = useViewport();
   const { theme } = useTheme();
   const { isLocked, isReady, chromeStorageService, setIsLocked } = useServiceContext();
+  // Guard: if chromeStorageService is undefined, show loader and do not proceed
+  if (!chromeStorageService) {
+    return (
+      <Router>
+        <MainContainer $isMobile={isMobile} theme={theme}>
+          <PageLoader message="Initializing..." theme={theme} />
+        </MainContainer>
+      </Router>
+    );
+  }
   const menuContext = useContext(BottomMenuContext);
   const {
     connectRequest,
