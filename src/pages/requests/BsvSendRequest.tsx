@@ -157,8 +157,7 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
       }
     } finally {
       setIsProcessing(false);
-    }    git add .
-    git commit -m "Initial commit"
+    }
   };
 
   useEffect(() => {
