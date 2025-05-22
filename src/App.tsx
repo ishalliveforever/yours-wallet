@@ -105,9 +105,9 @@ export const App = () => {
   const menuContext = useContext(BottomMenuContext);
   const {
     connectRequest,
-    setConnectRequest, // <-- get setter
+    setConnectRequest,
     sendBsvRequest,
-    setSendBsvRequest, // <-- add this line
+    setSendBsvRequest,
     sendBsv20Request,
     sendMNEERequest,
     transferOrdinalRequest,
@@ -125,19 +125,27 @@ export const App = () => {
   const [whitelistedApps, setWhitelistedApps] = useState<WhitelistedApp[]>([]);
   const [storageReady, setStorageReady] = useState(false);
 
+  // Loader guard: render spinner if chromeStorageService is not ready
+  if (!chromeStorageService) {
+    return (
+      <Router>
+        <MainContainer $isMobile={isMobile} theme={theme}>
+          <PageLoader message="Initializing..." theme={theme} />
+        </MainContainer>
+      </Router>
+    );
+  }
+
   useEffect(() => {
     (async () => {
-      if (!chromeStorageService) {
-        console.warn('chromeStorageService is undefined in App.tsx');
-        return;
-      }
+      if (!chromeStorageService) return;
       await chromeStorageService.getAndSetStorage();
       setStorageReady(true);
     })();
   }, [chromeStorageService]);
 
   useEffect(() => {
-    if (isReady) {
+    if (isReady && chromeStorageService) {
       const { account } = chromeStorageService.getCurrentAccountObject();
       setWhitelistedApps(account?.settings?.whitelist ?? []);
     }
@@ -146,9 +154,11 @@ export const App = () => {
   useActivityDetector(isLocked, isReady, chromeStorageService);
 
   useEffect(() => {
-    isReady && getStorageAndSetRequestState(chromeStorageService);
+    if (isReady && chromeStorageService) {
+      getStorageAndSetRequestState(chromeStorageService);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReady]);
+  }, [isReady, chromeStorageService]);
 
   const handleUnlock = async () => {
     setIsLocked(false);
@@ -324,17 +334,6 @@ export const App = () => {
       <Router>
         <MainContainer $isMobile={isMobile} theme={theme}>
           <PageLoader message="Loading..." theme={theme} />
-        </MainContainer>
-      </Router>
-    );
-  }
-
-  // Move loader guard here, after all hooks
-  if (!chromeStorageService) {
-    return (
-      <Router>
-        <MainContainer $isMobile={isMobile} theme={theme}>
-          <PageLoader message="Initializing..." theme={theme} />
         </MainContainer>
       </Router>
     );
