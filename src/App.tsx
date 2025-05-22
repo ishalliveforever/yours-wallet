@@ -309,13 +309,27 @@ export const App = () => {
   // Wallet connect messaging hook (move this above render)
   const { pendingRequest, approve, deny } = useWalletConnectMessaging(walletAddress);
 
-  // Determine if a wallet/account exists
+  // Debug logging
+  console.log('App.tsx debug:', {
+    isReady,
+    storageReady,
+    chromeStorageServiceDefined: !!chromeStorageService,
+    currentPath: window.location.pathname
+  });
+
+  // Always redirect to onboarding if no wallet/account exists
   let hasWalletOrAccount = false;
   try {
-    const current = chromeStorageService.getCurrentAccountObject();
-    hasWalletOrAccount = !!(current && current.account && current.account.encryptedKeys);
+    if (chromeStorageService) {
+      const current = chromeStorageService.getCurrentAccountObject();
+      hasWalletOrAccount = Boolean(current && current.account && current.account.encryptedKeys);
+    }
   } catch (e) {
     hasWalletOrAccount = false;
+  }
+  if (!hasWalletOrAccount && window.location.pathname !== '/') {
+    window.location.replace('/');
+    return null;
   }
 
   // Loader guard: render spinner if chromeStorageService is not ready
