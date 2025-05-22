@@ -1,0 +1,38 @@
+import { createContext } from 'react';
+import {
+  Broadcast,
+  DecryptRequest,
+  EncryptRequest,
+  GetSignatures,
+  PurchaseOrdinal,
+  SendBsv,
+  SendBsv20,
+  SendMNEE,
+  SignMessage,
+  TaggedDerivationRequest,
+  TransferOrdinal,
+} from 'yours-wallet-provider';
+import { RequestParams } from '../inject';
+import { ChromeStorageService } from '../services/ChromeStorage.service';
+
+export type Web3RequestContextProps = {
+  connectRequest: RequestParams | undefined;
+  setConnectRequest: (req: RequestParams | undefined) => void; // <-- add setter
+  sendBsvRequest: SendBsv[] | undefined;
+  setSendBsvRequest: (req: SendBsv[] | undefined) => void; // <-- add setter for sendBsvRequest
+  sendBsv20Request: SendBsv20 | undefined;
+  sendMNEERequest: SendMNEE[] | undefined;
+  transferOrdinalRequest: TransferOrdinal | undefined;
+  purchaseOrdinalRequest: PurchaseOrdinal | undefined;
+  signMessageRequest: SignMessage | undefined;
+  broadcastRequest: Broadcast | undefined;
+  getSignaturesRequest: GetSignatures | undefined;
+  generateTaggedKeysRequest: TaggedDerivationRequest | undefined;
+  encryptRequest: EncryptRequest | undefined;
+  decryptRequest: DecryptRequest | undefined;
+  popupId: number | undefined;
+  getStorageAndSetRequestState: (chromeStorageService: ChromeStorageService) => void;
+  clearRequest: (type: keyof Omit<Web3RequestContextProps, 'clearRequest'>) => void;
+};
+
+export const Web3RequestContext = createContext<Web3RequestContextProps | undefined>(undefined);
