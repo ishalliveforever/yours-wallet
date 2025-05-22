@@ -15,7 +15,16 @@ import { ImportAccount } from './pages/onboarding/ImportAccount';
 import { RestoreAccount } from './pages/onboarding/RestoreAccount';
 import { Start } from './pages/onboarding/Start';
 import { OrdWallet } from './pages/OrdWallet';
+import { BroadcastRequest } from './pages/requests/BroadcastRequest';
+import { BsvSendRequest } from './pages/requests/BsvSendRequest';
 import { ConnectRequest } from './pages/requests/ConnectRequest';
+import { DecryptRequest } from './pages/requests/DecryptRequest';
+import { EncryptRequest } from './pages/requests/EncryptRequest';
+import { GenerateTaggedKeysRequest } from './pages/requests/GenerateTaggedKeysRequest';
+import { GetSignaturesRequest } from './pages/requests/GetSignaturesRequest';
+import { OrdPurchaseRequest } from './pages/requests/OrdPurchaseRequest';
+import { OrdTransferRequest } from './pages/requests/OrdTransferRequest';
+import { SignMessageRequest } from './pages/requests/SignMessageRequest';
 import { Settings } from './pages/Settings';
 import { WhiteLabelTheme } from './theme.types';
 import { WhitelistedApp } from './inject';
@@ -23,16 +32,17 @@ import { PageLoader } from './components/PageLoader';
 import { useServiceContext } from './hooks/useServiceContext';
 import { useWeb3RequestContext } from './hooks/useWeb3RequestContext';
 import { MasterRestore } from './pages/onboarding/MasterRestore';
+import { Bsv20SendRequest } from './pages/requests/Bsv20SendRequest';
 import { BlockHeightProvider } from './contexts/providers/BlockHeightProvider';
 import { QueueProvider } from './contexts/providers/QueueProvider';
 import { BottomMenuProvider } from './contexts/providers/BottomMenuProvider';
 import { SnackbarProvider } from './contexts/providers/SnackbarProvider';
+import { MNEESendRequest } from './pages/requests/MNEESendRequest';
+import { Modal } from './components/Modal';
+import { useWalletConnectMessaging } from './hooks/useWalletConnectMessaging';
 import { Button } from './components/Button';
 import { DappBrowser } from './pages/DappBrowser';
 import { DappFullPage } from './pages/DappFullPage';
-import { Modal } from './components/Modal';
-import { useWalletConnectMessaging } from './hooks/useWalletConnectMessaging';
-import { BsvSendRequest } from './pages/requests/BsvSendRequest';
 
 const MainContainer = styled.div<WhiteLabelTheme & { $isMobile?: boolean }>`
   display: flex;
@@ -95,11 +105,19 @@ export const App = () => {
   const menuContext = useContext(BottomMenuContext);
   const {
     connectRequest,
-    setConnectRequest,
+    setConnectRequest, // <-- get setter
     sendBsvRequest,
-    setSendBsvRequest,
+    setSendBsvRequest, // <-- add this line
+    sendBsv20Request,
+    sendMNEERequest,
     transferOrdinalRequest,
     purchaseOrdinalRequest,
+    signMessageRequest,
+    broadcastRequest,
+    getSignaturesRequest,
+    generateTaggedKeysRequest,
+    encryptRequest,
+    decryptRequest,
     clearRequest,
     popupId,
     getStorageAndSetRequestState,
