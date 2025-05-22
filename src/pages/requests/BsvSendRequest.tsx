@@ -31,7 +31,7 @@ export type BsvSendRequestProps = {
 };
 
 export const BsvSendRequest = (props: BsvSendRequestProps) => {
-  const { request, requestWithinApp, popupId, onResponse } = props;
+  const { request, requestWithinApp, onResponse } = props;
   const { theme } = useTheme();
   const { handleSelect, hideMenu } = useBottomMenu();
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -152,7 +152,13 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
       console.log(error);
       // Send error to opener and close popup
       if (!requestWithinApp && window.opener) {
-        window.opener.postMessage({ type: 'SEND_BSV_RESULT', success: false, error: error?.message || 'Unknown error' }, '*');
+        const errorMsg =
+          error instanceof Error
+            ? error.message
+            : typeof error === 'string'
+              ? error
+              : 'Unknown error';
+        window.opener.postMessage({ type: 'SEND_BSV_RESULT', success: false, error: errorMsg }, '*');
         setTimeout(() => window.close(), 300);
       }
     } finally {
