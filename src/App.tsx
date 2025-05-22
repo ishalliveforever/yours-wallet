@@ -123,18 +123,14 @@ export const App = () => {
     getStorageAndSetRequestState,
   } = useWeb3RequestContext();
   const [whitelistedApps, setWhitelistedApps] = useState<WhitelistedApp[]>([]);
+  const [storageReady, setStorageReady] = useState(false);
 
-  // Get current account address for wallet connect
-  let walletAddress: string | undefined = undefined;
-  try {
-    const current = chromeStorageService.getCurrentAccountObject();
-    walletAddress = current?.account?.addresses?.bsvAddress;
-  } catch (e) {
-    walletAddress = undefined;
-  }
-
-  // Wallet connect messaging hook
-  const { pendingRequest, approve, deny } = useWalletConnectMessaging(walletAddress);
+  useEffect(() => {
+    (async () => {
+      await chromeStorageService.getAndSetStorage();
+      setStorageReady(true);
+    })();
+  }, [chromeStorageService]);
 
   useEffect(() => {
     if (isReady) {
@@ -298,6 +294,18 @@ export const App = () => {
     return () => window.removeEventListener('message', handleGetSocialProfileMessage);
   }, [chromeStorageService]);
 
+  // Get current account address for wallet connect
+  let walletAddress: string | undefined = undefined;
+  try {
+    const current = chromeStorageService.getCurrentAccountObject();
+    walletAddress = current?.account?.addresses?.bsvAddress;
+  } catch (e) {
+    walletAddress = undefined;
+  }
+
+  // Wallet connect messaging hook (move this above render)
+  const { pendingRequest, approve, deny } = useWalletConnectMessaging(walletAddress);
+
   // Determine if a wallet/account exists
   let hasWalletOrAccount = false;
   try {
@@ -310,8 +318,8 @@ export const App = () => {
     hasWalletOrAccount = false;
   }
 
-  if (!isReady) {
-    console.log('[App.tsx] Not ready, rendering loader.');
+  if (!isReady || !storageReady) {
+    console.log('[App.tsx] Not ready or storage not loaded, rendering loader.');
     return (
       <Router>
         <MainContainer $isMobile={isMobile} theme={theme}>
