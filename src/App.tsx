@@ -302,12 +302,16 @@ export const App = () => {
   let hasWalletOrAccount = false;
   try {
     const current = chromeStorageService.getCurrentAccountObject();
+    console.log('[App.tsx] chromeStorageService.getCurrentAccountObject:', current);
     hasWalletOrAccount = !!(current && current.account && current.account.encryptedKeys);
+    console.log('[App.tsx] hasWalletOrAccount:', hasWalletOrAccount);
   } catch (e) {
+    console.error('[App.tsx] Error getting current account object:', e);
     hasWalletOrAccount = false;
   }
 
   if (!isReady) {
+    console.log('[App.tsx] Not ready, rendering loader.');
     return (
       <Router>
         <MainContainer $isMobile={isMobile} theme={theme}>

@@ -35,6 +35,8 @@ export const Start = () => {
   const { chromeStorageService } = useServiceContext();
   const { account } = chromeStorageService.getCurrentAccountObject();
   const encryptedKeys = account?.encryptedKeys;
+  console.log('[Start.tsx] account:', account);
+  console.log('[Start.tsx] encryptedKeys:', encryptedKeys);
 
   useEffect(() => {
     hideMenu();
@@ -47,11 +49,13 @@ export const Start = () => {
   useEffect(() => {
     if (encryptedKeys) {
       setShowStart(false);
+      console.log('[Start.tsx] encryptedKeys found, navigating to /bsv-wallet');
       navigate('/bsv-wallet');
       return;
     }
 
     setShowStart(true);
+    console.log('[Start.tsx] No encryptedKeys, showing onboarding.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [encryptedKeys]);
 
