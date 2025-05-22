@@ -76,9 +76,7 @@ export const ConnectRequest = (props: ConnectRequestProps) => {
       urlRequest = JSON.parse(decodeURIComponent(params.get('request')!));
     }
     urlReturn = params.get('returnUrl') ? decodeURIComponent(params.get('returnUrl')!) : '';
-  } catch (e) {
-    // Intentionally left empty to silently handle malformed URL params
-  }
+  } catch (e) {}
 
   useEffect(() => {
     if (!context) return;

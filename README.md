@@ -2,6 +2,10 @@
 
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 
+Version: v4.4.1
+
+<a href="https://chromewebstore.google.com/detail/yours-wallet/mlbnicldlpdimbjdcncnklfempedeipj" target="_blank">🌱 Download Chrome Extension 🌱</a>
+
 # Yours Wallet | Non-Custodial Web3 SPV Wallet For BSV
 
 Yours Wallet is an open-source and non-custodial web3 SPV wallet for Bitcoin SV (BSV) and [1Sat Ordinals](https://docs.1satordinals.com/). This wallet allows users to have full control over their funds, providing security and independence in managing their assets.
@@ -15,119 +19,31 @@ Yours Wallet is an open-source and non-custodial web3 SPV wallet for Bitcoin SV 
 - 🟡 **1Sat Ordinals:** Full support for sending and transferring 1Sat Ordinals.
 - 🔐 **Secure:** Open Source and audited by the community.
 
+## Development
+
+#### Wallet Provider API 🚀
+
+Documentation on integrating Yours Wallet into your decentralized web3 application can be [found here](https://panda-wallet.gitbook.io/provider-api/).
+
+You can also check out the live sample app: [View Sample App](https://panda-wallet-sample-app.vercel.app/)
+
+#### Contributing 🙌
+
+If you'd like to contribute to the development of Yours Wallet, check out [contributing](CONTRIBUTING.md).
+
+## Issues, Bugs, and Feature Requests
+
+[Create an issue](https://github.com/yours-org/yours-wallet/issues) and track the [Kanban Board](https://github.com/orgs/Panda-Wallet/projects/1)
+
+## Support The Project
+
+**BSV:** `1MtzWXQEYGp89bQ9U2nfrnuChFv37j6pV6`
+
+## Contact Us
+
+- [@yoursxbt on X](https://twitter.com/yoursxbt)
+- [Discord](https://discord.gg/qHs6hTkmsf)
 
 ## License
 
 Yours Wallet is released under the [MIT License](https://opensource.org/licenses/MIT)
-
-## Integrating Yours Wallet: Quick Start for Web Apps
-
-This guide shows you, step by step, how to connect your web app to Yours Wallet, keep users connected, disconnect, and show their balance—just like in `test-connect.html`. No browser extension is needed. Yours Wallet injects a `window.yourswallet` object into your page.
-
-### 1. Check if Yours Wallet is Available
-
-Add this check before you do anything else:
-
-```js
-if (!window.yourswallet) {
-  alert('Yours Wallet is not available on this page.');
-}
-```
-
-### 2. Connect to the Wallet (Get User Address)
-
-Call this function when the user clicks "Connect":
-
-```js
-async function connectWallet() {
-  if (!window.yourswallet) return;
-  try {
-    const result = await window.yourswallet.request('getAddress');
-    const address = result.address;
-    localStorage.setItem('yoursWalletAddress', address); // Save for later
-    showConnected(address);
-  } catch (e) {
-    alert('Could not connect: ' + e.message);
-  }
-}
-```
-
-### 3. Keep Users Connected (Session Persistence)
-
-When your page loads, check if the user is already connected:
-
-```js
-function restoreConnection() {
-  const address = localStorage.getItem('yoursWalletAddress');
-  if (address) {
-    showConnected(address);
-  } else {
-    showDisconnected();
-  }
-}
-
-document.addEventListener('DOMContentLoaded', restoreConnection);
-```
-
-### 4. Disconnect the Wallet
-
-Let users disconnect with a button:
-
-```js
-function disconnectWallet() {
-  localStorage.removeItem('yoursWalletAddress');
-  showDisconnected();
-}
-```
-
-### 5. Show the User's Balance
-
-Call this after connecting, or when the user clicks "Get Balance":
-
-```js
-async function getBalance(address) {
-  if (!window.yourswallet) return;
-  try {
-    const result = await window.yourswallet.request('getBalance', { address });
-    showBalance(result.balance);
-  } catch (e) {
-    alert('Could not get balance: ' + e.message);
-  }
-}
-```
-
-### 6. Example: Putting It All Together
-
-Here's a simple way to wire up your buttons and UI:
-
-```js
-window.addEventListener('DOMContentLoaded', () => {
-  const connectBtn = document.getElementById('connectBtn');
-  const disconnectBtn = document.getElementById('disconnectBtn');
-  const balanceBtn = document.getElementById('balanceBtn');
-
-  restoreConnection();
-
-  connectBtn.onclick = connectWallet;
-  disconnectBtn.onclick = disconnectWallet;
-  balanceBtn.onclick = () => {
-    const address = localStorage.getItem('yoursWalletAddress');
-    if (address) getBalance(address);
-  };
-});
-```
-
-### 7. UI Tips
-- Show the Connect button only if not connected.
-- Show Disconnect and Get Balance only if connected.
-- Display the user's address and balance clearly.
-- Use functions like `showConnected(address)`, `showDisconnected()`, and `showBalance(balance)` to update your UI.
-
-### 8. Best Practices
-- Always check for `window.yourswallet` before using it.
-- Use `localStorage` to remember the connection.
-- Handle errors with alerts or messages.
-- Wrap your code in `DOMContentLoaded` so your elements are ready.
-
-
-

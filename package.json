@@ -27,7 +27,6 @@
     "eslint-plugin-react-refresh": "^0.4.7",
     "file-saver": "^2.0.5",
     "framer-motion": "^11.11.11",
-    "gh-pages": "^6.3.0",
     "js-1sat-ord": "^0.1.80",
     "jszip": "^3.10.1",
     "mnee": "^1.2.0",
@@ -57,9 +56,7 @@
     "build": "react-app-rewired build",
     "test": "react-app-rewired test",
     "eject": "react-app-rewired eject",
-    "format": "prettier --write .",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d build"
+    "format": "prettier --write ."
   },
   "eslintConfig": {
     "extends": [
@@ -91,6 +88,5 @@
     "prettier": "^3.3.2",
     "process": "^0.11.10",
     "react-app-rewired": "^2.2.1"
-  },
-  "homepage": "https://ishalliveforever.github.io/yours-wallet"
+  }
 }

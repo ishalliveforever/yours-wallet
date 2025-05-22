@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { useContext, useEffect, useState } from 'react';
-import { MemoryRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
 import styled from 'styled-components';
 import { Show } from './components/Show';
 import { UnlockWallet } from './components/UnlockWallet';
@@ -105,9 +105,9 @@ export const App = () => {
   const menuContext = useContext(BottomMenuContext);
   const {
     connectRequest,
-    setConnectRequest,
+    setConnectRequest, // <-- get setter
     sendBsvRequest,
-    setSendBsvRequest,
+    setSendBsvRequest, // <-- add this line
     sendBsv20Request,
     sendMNEERequest,
     transferOrdinalRequest,
@@ -123,18 +123,21 @@ export const App = () => {
     getStorageAndSetRequestState,
   } = useWeb3RequestContext();
   const [whitelistedApps, setWhitelistedApps] = useState<WhitelistedApp[]>([]);
-  const [storageReady, setStorageReady] = useState(false);
+
+  // Get current account address for wallet connect
+  let walletAddress: string | undefined = undefined;
+  try {
+    const current = chromeStorageService.getCurrentAccountObject();
+    walletAddress = current?.account?.addresses?.bsvAddress;
+  } catch (e) {
+    walletAddress = undefined;
+  }
+
+  // Wallet connect messaging hook
+  const { pendingRequest, approve, deny } = useWalletConnectMessaging(walletAddress);
 
   useEffect(() => {
-    (async () => {
-      if (!chromeStorageService) return;
-      await chromeStorageService.getAndSetStorage();
-      setStorageReady(true);
-    })();
-  }, [chromeStorageService]);
-
-  useEffect(() => {
-    if (isReady && chromeStorageService) {
+    if (isReady) {
       const { account } = chromeStorageService.getCurrentAccountObject();
       setWhitelistedApps(account?.settings?.whitelist ?? []);
     }
@@ -143,11 +146,9 @@ export const App = () => {
   useActivityDetector(isLocked, isReady, chromeStorageService);
 
   useEffect(() => {
-    if (isReady && chromeStorageService) {
-      getStorageAndSetRequestState(chromeStorageService);
-    }
+    isReady && getStorageAndSetRequestState(chromeStorageService);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isReady, chromeStorageService]);
+  }, [isReady]);
 
   const handleUnlock = async () => {
     setIsLocked(false);
@@ -297,53 +298,16 @@ export const App = () => {
     return () => window.removeEventListener('message', handleGetSocialProfileMessage);
   }, [chromeStorageService]);
 
-  // Get current account address for wallet connect
-  let walletAddress: string | undefined = undefined;
-  try {
-    const current = chromeStorageService.getCurrentAccountObject();
-    walletAddress = current?.account?.addresses?.bsvAddress;
-  } catch (e) {
-    walletAddress = undefined;
-  }
-
-  // Wallet connect messaging hook (move this above render)
-  const { pendingRequest, approve, deny } = useWalletConnectMessaging(walletAddress);
-
-  // Debug logging
-  console.log('App.tsx debug:', {
-    isReady,
-    storageReady,
-    chromeStorageServiceDefined: !!chromeStorageService,
-    currentPath: window.location.pathname
-  });
-
-  // Always redirect to onboarding if no wallet/account exists
+  // Determine if a wallet/account exists
   let hasWalletOrAccount = false;
   try {
-    if (chromeStorageService) {
-      const current = chromeStorageService.getCurrentAccountObject();
-      hasWalletOrAccount = Boolean(current && current.account && current.account.encryptedKeys);
-    }
+    const current = chromeStorageService.getCurrentAccountObject();
+    hasWalletOrAccount = !!(current && current.account && current.account.encryptedKeys);
   } catch (e) {
     hasWalletOrAccount = false;
   }
-  if (!hasWalletOrAccount && window.location.pathname !== '/') {
-    window.location.replace('/');
-    return null;
-  }
 
-  // Loader guard: render spinner if chromeStorageService is not ready
-  if (!chromeStorageService) {
-    return (
-      <Router>
-        <MainContainer $isMobile={isMobile} theme={theme}>
-          <PageLoader message="Initializing..." theme={theme} />
-        </MainContainer>
-      </Router>
-    );
-  }
-
-  if (!isReady || !storageReady) {
+  if (!isReady) {
     return (
       <Router>
         <MainContainer $isMobile={isMobile} theme={theme}>
@@ -382,16 +346,8 @@ export const App = () => {
                   </Modal>
                   <Show when={!isLocked} whenFalseContent={<UnlockWallet onUnlock={handleUnlock} />}>
                     <Routes>
-                      <Route path="/bsv-wallet" element={
-                        hasWalletOrAccount
-                          ? <BsvWallet isOrdRequest={!!transferOrdinalRequest || !!purchaseOrdinalRequest} />
-                          : <Navigate to="/" replace />
-                      } />
-                      <Route path="/ord-wallet" element={
-                        hasWalletOrAccount
-                          ? <OrdWallet />
-                          : <Navigate to="/" replace />
-                      } />
+                      <Route path="/bsv-wallet" element={<BsvWallet isOrdRequest={!!transferOrdinalRequest || !!purchaseOrdinalRequest} />} />
+                      <Route path="/ord-wallet" element={<OrdWallet />} />
                       <Route path="/tools" element={<AppsAndTools />} />
                       <Route path="/settings" element={<Settings />} />
                       <Route path="/browser" element={<DappBrowser />} />
@@ -403,7 +359,7 @@ export const App = () => {
                         <ConnectRequest request={connectRequest} onDecision={() => clearRequest('connectRequest')} whiteListedApps={whitelistedApps} popupId={popupId} />
                       } />
                       <Route path="/browser/view" element={<DappFullPage />} />
-                      <Route path="/" element={<Start storageReady={storageReady} />} />
+                      <Route path="/" element={<Start />} />
                     </Routes>
                   </Show>
                 </SnackbarProvider>
