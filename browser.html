@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Yours Wallet Browser</title>
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; background: #181A20; color: #fff; }
+    #browser-bar { display: flex; padding: 0.5rem; background: #23242A; border-bottom: 1px solid #222; }
+    #url-input { flex: 1; font-size: 1rem; padding: 0.5rem; border-radius: 6px; border: 1px solid #333; background: #23242A; color: #fff; }
+    #go-btn { font-size: 1rem; padding: 0.5rem 1rem; margin-left: 0.5rem; border-radius: 6px; background: #222; color: #fff; border: none; }
+    #browser-frame { width: 100vw; height: calc(100vh - 48px); border: none; }
+  </style>
+</head>
+<body>
+  <form id="browser-bar" onsubmit="return false;">
+    <input id="url-input" type="text" placeholder="Enter URL (e.g. https://...)" />
+    <button id="go-btn">Go</button>
+  </form>
+  <iframe id="browser-frame"></iframe>
+  <script>
+    const input = document.getElementById('url-input');
+    const btn = document.getElementById('go-btn');
+    const frame = document.getElementById('browser-frame');
+    function navigate() {
+      let url = input.value.trim();
+      if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+      frame.src = url;
+    }
+    btn.onclick = navigate;
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') navigate(); });
+  </script>
+</body>
+</html>

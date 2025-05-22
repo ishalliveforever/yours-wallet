@@ -1,0 +1,30 @@
+{
+  "files": {
+    "main.js": "/yours-wallet/main.js",
+    "main.css": "/yours-wallet/static/css/main.e6c13ad2.css",
+    "background.js": "/yours-wallet/background.js",
+    "content.js": "/yours-wallet/content.js",
+    "inject.js": "/yours-wallet/inject.js",
+    "static/media/icon.png": "/yours-wallet/static/media/icon.bfc22bd38cd662246fab.png",
+    "static/media/twetch.svg": "/yours-wallet/static/media/twetch.913704f2866b4ec49fd5ca1665a9fcc9.svg",
+    "static/media/master-wallet.svg": "/yours-wallet/static/media/master-wallet.121e0016564e8fb1840d2c05399c825f.svg",
+    "static/media/relayx.svg": "/yours-wallet/static/media/relayx.9f17f99be8621fc570922f7fd5d5a175.svg",
+    "static/media/wif-wallet.svg": "/yours-wallet/static/media/wif-wallet.d85c7bc215f1143d33758cfd91f946f4.svg",
+    "static/media/bsv-coin.svg": "/yours-wallet/static/media/bsv-coin.56f050463914034a384d6ac1e8296660.svg",
+    "index.html": "/yours-wallet/index.html",
+    "static/media/copy.svg": "/yours-wallet/static/media/copy.252b891deb3b80921af8d35e46e616d7.svg",
+    "static/media/github.svg": "/yours-wallet/static/media/github.4e60e3d0dfa723333c237ea0d37a7cf3.svg",
+    "static/media/other-wallet.svg": "/yours-wallet/static/media/other-wallet.d96e39c2c8aa3f5dd4fa4ea7dd002c35.svg",
+    "static/media/green-check.svg": "/yours-wallet/static/media/green-check.9bfdbce1d17a1b18a141c6a0bc76c895.svg",
+    "static/media/lock.svg": "/yours-wallet/static/media/lock.f639194b8ea08fc5031ff14083d6793d.svg",
+    "static/media/x.svg": "/yours-wallet/static/media/x.b9ee9416c7c01cf7c6809bbd63c73bd3.svg",
+    "static/media/chevrons.svg": "/yours-wallet/static/media/chevrons.ee2a0250b68b6e5c90c3e2e57c6a1d6c.svg",
+    "main.js.map": "/yours-wallet/main.js.map",
+    "main.e6c13ad2.css.map": "/yours-wallet/static/css/main.e6c13ad2.css.map",
+    "inject.js.map": "/yours-wallet/inject.js.map"
+  },
+  "entrypoints": [
+    "main.js",
+    "static/css/main.e6c13ad2.css"
+  ]
+}
