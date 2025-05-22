@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 import { useContext, useEffect, useState } from 'react';
-import { MemoryRouter as Router, Route, Routes } from 'react-router-dom';
+import { MemoryRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { Show } from './components/Show';
 import { UnlockWallet } from './components/UnlockWallet';
@@ -346,11 +346,15 @@ export const App = () => {
                   </Modal>
                   <Show when={!isLocked} whenFalseContent={<UnlockWallet onUnlock={handleUnlock} />}>
                     <Routes>
-                      <Route path="/bsv-wallet" element={<BsvWallet isOrdRequest={!!transferOrdinalRequest || !!purchaseOrdinalRequest} />} />
-                      <Route path="/ord-wallet" element={<OrdWallet />} />
-                      <Route path="/tools" element={<AppsAndTools />} />
-                      <Route path="/settings" element={<Settings />} />
-                      <Route path="/browser" element={<DappBrowser />} />
+                      <Route path="/bsv-wallet" element={
+                        hasWalletOrAccount ? <BsvWallet isOrdRequest={!!transferOrdinalRequest || !!purchaseOrdinalRequest} /> : <Navigate to="/" replace />
+                      } />
+                      <Route path="/ord-wallet" element={
+                        hasWalletOrAccount ? <OrdWallet /> : <Navigate to="/" replace />
+                      } />
+                      <Route path="/tools" element={hasWalletOrAccount ? <AppsAndTools /> : <Navigate to="/" replace />} />
+                      <Route path="/settings" element={hasWalletOrAccount ? <Settings /> : <Navigate to="/" replace />} />
+                      <Route path="/browser" element={hasWalletOrAccount ? <DappBrowser /> : <Navigate to="/" replace />} />
                       <Route path="/create-wallet" element={<CreateAccount onNavigateBack={() => null} newWallet />} />
                       <Route path="/restore-wallet" element={<RestoreAccount onNavigateBack={() => null} newWallet />} />
                       <Route path="/import-wallet" element={<ImportAccount onNavigateBack={() => null} newWallet />} />
