@@ -127,6 +127,10 @@ export const App = () => {
 
   useEffect(() => {
     (async () => {
+      if (!chromeStorageService) {
+        console.warn('chromeStorageService is undefined in App.tsx');
+        return;
+      }
       await chromeStorageService.getAndSetStorage();
       setStorageReady(true);
     })();
