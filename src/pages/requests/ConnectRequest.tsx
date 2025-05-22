@@ -76,13 +76,15 @@ export const ConnectRequest = (props: ConnectRequestProps) => {
       urlRequest = JSON.parse(decodeURIComponent(params.get('request')!));
     }
     urlReturn = params.get('returnUrl') ? decodeURIComponent(params.get('returnUrl')!) : '';
-  } catch (e) {}
+  } catch (e) {
+    // intentionally empty: ignore malformed params
+  }
 
   useEffect(() => {
-    if (!context) return;
-    context.hideMenu();
-
-    return () => context.showMenu();
+    context?.hideMenu();
+    return () => {
+      if (context) context.showMenu();
+    };
   }, [context]);
 
   useEffect(() => {

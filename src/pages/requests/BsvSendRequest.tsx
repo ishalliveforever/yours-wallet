@@ -151,8 +151,14 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
     } catch (error) {
       console.log(error);
       // Send error to opener and close popup
+      let errorMsg = 'Unknown error';
+      if (typeof error === 'string') {
+        errorMsg = error;
+      } else if (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string') {
+        errorMsg = (error as any).message;
+      }
       if (!requestWithinApp && window.opener) {
-        window.opener.postMessage({ type: 'SEND_BSV_RESULT', success: false, error: error?.message || 'Unknown error' }, '*');
+        window.opener.postMessage({ type: 'SEND_BSV_RESULT', success: false, error: errorMsg }, '*');
         setTimeout(() => window.close(), 300);
       }
     } finally {
