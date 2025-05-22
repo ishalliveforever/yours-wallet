@@ -33,14 +33,28 @@ export const Start = () => {
   const [showStart, setShowStart] = useState(false);
   const { hideMenu, showMenu } = useBottomMenu();
   const { chromeStorageService } = useServiceContext();
-  const { account } = chromeStorageService.getCurrentAccountObject();
-  const encryptedKeys = account?.encryptedKeys;
-  console.log('[Start.tsx] account:', account);
-  console.log('[Start.tsx] encryptedKeys:', encryptedKeys);
+  let account: any = undefined;
+  let encryptedKeys: any = undefined;
+  let errorMsg = '';
+  try {
+    account = chromeStorageService.getCurrentAccountObject().account;
+    encryptedKeys = account?.encryptedKeys;
+    console.log('[Start.tsx] account:', account);
+    console.log('[Start.tsx] encryptedKeys:', encryptedKeys);
+    if (!account) errorMsg = 'Error: Account is undefined. Storage may not be working.';
+  } catch (e) {
+    let msg = '';
+    if (typeof e === 'object' && e && 'message' in e) {
+      msg = (e as any).message;
+    } else {
+      msg = String(e);
+    }
+    errorMsg = 'Exception reading account: ' + msg;
+    console.error('[Start.tsx] Exception:', e);
+  }
 
   useEffect(() => {
     hideMenu();
-
     return () => {
       showMenu();
     };
@@ -53,33 +67,50 @@ export const Start = () => {
       navigate('/bsv-wallet');
       return;
     }
-
     setShowStart(true);
     console.log('[Start.tsx] No encryptedKeys, showing onboarding.');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [encryptedKeys]);
 
-  return (
-    <Show when={showStart}>
-      <Content>
-        <YoursIcon width="4rem" />
-        <TitleText theme={theme}>{`${theme.settings.walletName} Wallet`}</TitleText>
-        <Text theme={theme} style={{ margin: '0.25rem 0 1rem 0' }}>
-          An open source project.
-        </Text>
-        <Button theme={theme} type="primary" label="Create New Wallet" onClick={() => navigate('/create-wallet')} />
-        <Button
-          theme={theme}
-          type="secondary-outline"
-          label="Restore Wallet"
-          onClick={() => navigate('/restore-wallet')}
-        />
-        <GithubIcon
-          style={{ marginTop: '1rem' }}
-          src={gihubIcon}
-          onClick={() => window.open(theme.settings.repo, '_blank')}
-        />
-      </Content>
-    </Show>
-  );
+  if (errorMsg) {
+    return (
+      <div style={{ color: 'red', padding: '2rem', textAlign: 'center' }}>
+        {errorMsg}
+        <br />
+        <span style={{ color: '#888' }}>[This error is visible only in onboarding screen]</span>
+      </div>
+    );
+  }
+
+  try {
+    return (
+      <Show when={showStart}>
+        <Content>
+          <YoursIcon width="4rem" />
+          <TitleText theme={theme}>{`${theme.settings.walletName} Wallet`}</TitleText>
+          <Text theme={theme} style={{ margin: '0.25rem 0 1rem 0' }}>
+            An open source project.
+          </Text>
+          <Button theme={theme} type="primary" label="Create New Wallet" onClick={() => navigate('/create-wallet')} />
+          <Button
+            theme={theme}
+            type="secondary-outline"
+            label="Restore Wallet"
+            onClick={() => navigate('/restore-wallet')}
+          />
+          <GithubIcon
+            style={{ marginTop: '1rem' }}
+            src={gihubIcon}
+            onClick={() => window.open(theme.settings.repo, '_blank')}
+          />
+        </Content>
+      </Show>
+    );
+  } catch (err) {
+    return (
+      <div style={{ color: 'red', padding: '2rem', textAlign: 'center' }}>
+        Error rendering onboarding: {String(err)}
+      </div>
+    );
+  }
 };
