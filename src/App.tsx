@@ -302,7 +302,8 @@ export const App = () => {
   let hasWalletOrAccount = false;
   try {
     const current = chromeStorageService.getCurrentAccountObject();
-    hasWalletOrAccount = !!(current && current.account && current.account.encryptedKeys);
+    const account = current && current.account;
+    hasWalletOrAccount = !!(account && typeof account.encryptedKeys === 'string' && account.encryptedKeys.length > 0);
   } catch (e) {
     hasWalletOrAccount = false;
   }

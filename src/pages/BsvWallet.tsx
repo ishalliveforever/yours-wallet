@@ -53,6 +53,7 @@ import { Account } from '../services/types/chromeStorage.types';
 import { SendBsv20View } from '../components/SendBsv20View';
 import { FaucetButton } from '../components/FaucetButton';
 import { TxHistory } from '../components/TxHistory';
+import { Navigate } from 'react-router-dom';
 
 const MainContent = styled.div`
   display: flex;
@@ -223,6 +224,18 @@ export type Recipient = {
 
 export const BsvWallet = (props: BsvWalletProps) => {
   const { isOrdRequest } = props;
+  const { chromeStorageService, keysService, bsvService, ordinalService, oneSatSPV, mneeService } = useServiceContext();
+  let hasWalletOrAccount = false;
+  try {
+    const current = chromeStorageService.getCurrentAccountObject();
+    hasWalletOrAccount = !!(current && current.account && current.account.encryptedKeys);
+  } catch (e) {
+    hasWalletOrAccount = false;
+  }
+  if (!hasWalletOrAccount) {
+    return <Navigate to="/" replace />;
+  }
+
   const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -235,7 +248,6 @@ export const BsvWallet = (props: BsvWalletProps) => {
   const [satSendAmount, setSatSendAmount] = useState<number | null>(null);
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const { addSnackbar } = useSnackbar();
-  const { chromeStorageService, keysService, bsvService, ordinalService, oneSatSPV, mneeService } = useServiceContext();
   const { socialProfile } = useSocialProfile(chromeStorageService);
   const [unlockAttempted, setUnlockAttempted] = useState(false);
   const { connectRequest } = useWeb3RequestContext();
