@@ -125,17 +125,6 @@ export const App = () => {
   const [whitelistedApps, setWhitelistedApps] = useState<WhitelistedApp[]>([]);
   const [storageReady, setStorageReady] = useState(false);
 
-  // Loader guard: render spinner if chromeStorageService is not ready
-  if (!chromeStorageService) {
-    return (
-      <Router>
-        <MainContainer $isMobile={isMobile} theme={theme}>
-          <PageLoader message="Initializing..." theme={theme} />
-        </MainContainer>
-      </Router>
-    );
-  }
-
   useEffect(() => {
     (async () => {
       if (!chromeStorageService) return;
@@ -327,6 +316,17 @@ export const App = () => {
     hasWalletOrAccount = !!(current && current.account && current.account.encryptedKeys);
   } catch (e) {
     hasWalletOrAccount = false;
+  }
+
+  // Loader guard: render spinner if chromeStorageService is not ready
+  if (!chromeStorageService) {
+    return (
+      <Router>
+        <MainContainer $isMobile={isMobile} theme={theme}>
+          <PageLoader message="Initializing..." theme={theme} />
+        </MainContainer>
+      </Router>
+    );
   }
 
   if (!isReady || !storageReady) {
