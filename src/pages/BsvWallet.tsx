@@ -61,7 +61,7 @@ const MainContent = styled.div`
   align-items: center;
   width: 100vw;
   min-height: 100vh;
-  background: ${({ theme }) => theme.color.global.walletBackground};
+  background: ${({ theme }) => (theme as any).color.global.walletBackground};
   box-sizing: border-box;
   padding-bottom: 5.5rem; // for bottom nav
   @media (max-width: 600px) {
@@ -83,7 +83,7 @@ const MiddleContainer = styled.div<WhiteLabelTheme>`
   max-width: 340px;
   margin: 0 auto;
   padding: 1.25rem 0.25rem 1.25rem 0.25rem;
-  background: ${({ theme }) => theme.color.global.walletBackground};
+  background: ${({ theme }) => (theme as any).color.global.walletBackground};
   border-radius: 1rem;
   @media (max-width: 600px) {
     border-radius: 0;
@@ -224,26 +224,19 @@ export type Recipient = {
 
 export const BsvWallet = (props: BsvWalletProps) => {
   const { isOrdRequest } = props;
-  const { chromeStorageService, keysService, bsvService, ordinalService, oneSatSPV, mneeService } = useServiceContext();
-  let hasWalletOrAccount = false;
-  try {
-    const current = chromeStorageService.getCurrentAccountObject();
-    hasWalletOrAccount = !!(current && current.account && current.account.encryptedKeys);
-  } catch (e) {
-    hasWalletOrAccount = false;
-  }
-  if (!hasWalletOrAccount) {
-    return <Navigate to="/" replace />;
-  }
 
+  // All hooks must be called unconditionally at the top
+  const { chromeStorageService, keysService, bsvService, ordinalService, oneSatSPV, mneeService } = useServiceContext();
   const { theme } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const { updateBalance, isSyncing } = useQueueTracker();
-  const urlParams = new URLSearchParams(location.search);
   const { handleSelect, query } = useBottomMenu();
+  const urlParams = new URLSearchParams(location.search);
   const isReload = urlParams.get('reload') === 'true' || query === 'reload';
   urlParams.delete('reload');
+  const isOrd = urlParams.get('ord') === 'true';
+
   const [pageState, setPageState] = useState<PageState>('main');
   const [satSendAmount, setSatSendAmount] = useState<number | null>(null);
   const [passwordConfirm, setPasswordConfirm] = useState('');
@@ -254,8 +247,7 @@ export const BsvWallet = (props: BsvWalletProps) => {
   const isPasswordRequired = chromeStorageService.isPasswordRequired();
   const [isProcessing, setIsProcessing] = useState(false);
   const { bsvAddress, identityAddress } = keysService;
-  const { getBsvBalance, getExchangeRate, getLockData, unlockLockedCoins, updateBsvBalance, sendBsv, sendAllBsv } =
-    bsvService;
+  const { getBsvBalance, getExchangeRate, getLockData, unlockLockedCoins, updateBsvBalance, sendBsv, sendAllBsv } = bsvService;
   const [bsvBalance, setBsvBalance] = useState<number>(getBsvBalance());
   const [exchangeRate, setExchangeRate] = useState<number>(getExchangeRate());
   const [lockData, setLockData] = useState<LockData>();
@@ -273,7 +265,6 @@ export const BsvWallet = (props: BsvWalletProps) => {
   const [mneeBalance, setMneeBalance] = useState(0);
   const [mneeRecipient, setMneeRecipient] = useState('');
   const [mneeReciepientAmount, setMneeRecipientAmount] = useState<number | null>(null);
-
   const [recipients, setRecipients] = useState<Recipient[]>([
     { id: crypto.randomUUID(), address: '', satSendAmount: null, usdSendAmount: null, amountType: 'bsv' },
   ]);
@@ -639,9 +630,9 @@ export const BsvWallet = (props: BsvWalletProps) => {
       setMneeRecipientAmount(mneeBalance);
       return;
     }
-    const atomicBalance = mneeService.toAtomicAmount(mneeBalance, config.decimals);
+    const atomicBalance = mneeService.toAtomicAmount(mneeBalance); // Only one argument
     const fee = config.fees.find((fee) => atomicBalance >= fee.min && atomicBalance <= fee.max)?.fee || 0;
-    setMneeRecipientAmount((atomicBalance - fee) / 10 ** config.decimals);
+    setMneeRecipientAmount((atomicBalance - fee) / Math.pow(10, config.decimals));
   };
 
   const receive = (
