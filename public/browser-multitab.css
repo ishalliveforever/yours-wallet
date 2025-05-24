@@ -1,0 +1,12 @@
+body { font-family: sans-serif; margin: 0; padding: 0; background: #181A20; color: #fff; }
+#browser-bar { display: flex; padding: 0.5rem; background: #23242A; border-bottom: 1px solid #222; }
+#url-input { flex: 1; font-size: 1rem; padding: 0.5rem; border-radius: 6px; border: 1px solid #333; background: #23242A; color: #fff; }
+#go-btn, #new-tab-btn, #home-btn { font-size: 1rem; padding: 0.5rem 1rem; margin-left: 0.5rem; border-radius: 6px; background: #222; color: #fff; border: none; }
+#tabs-bar { display: flex; background: #23242A; border-bottom: 1px solid #222; }
+.tab { padding: 0.5rem 1rem; cursor: pointer; background: #23242A; color: #fff; border: none; border-right: 1px solid #333; }
+.tab.active { background: #333; color: #fff; font-weight: bold; }
+.tab .close-btn { margin-left: 0.5rem; color: #aaa; cursor: pointer; }
+#browser-frame { width: 100vw; height: calc(100vh - 96px); border: none; background: #fff; }
+#home-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(100vh - 96px); background: #181A20; color: #fff; }
+#recent-sites { margin-top: 2rem; }
+.recent-site-link { color: #4fa3ff; cursor: pointer; display: block; margin: 0.5rem 0; text-decoration: underline; }

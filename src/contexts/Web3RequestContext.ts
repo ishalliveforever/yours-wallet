@@ -17,9 +17,7 @@ import { ChromeStorageService } from '../services/ChromeStorage.service';
 
 export type Web3RequestContextProps = {
   connectRequest: RequestParams | undefined;
-  setConnectRequest: (req: RequestParams | undefined) => void; // <-- add setter
   sendBsvRequest: SendBsv[] | undefined;
-  setSendBsvRequest: (req: SendBsv[] | undefined) => void; // <-- add setter for sendBsvRequest
   sendBsv20Request: SendBsv20 | undefined;
   sendMNEERequest: SendMNEE[] | undefined;
   transferOrdinalRequest: TransferOrdinal | undefined;

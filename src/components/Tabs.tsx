@@ -42,19 +42,16 @@ const TabButton = styled.button<WhiteLabelTheme & { $selected: boolean; $leftBut
   cursor: pointer;
   border-radius: ${(props) => (props.$leftButton ? '1rem 0 0 1rem' : '0 1rem 1rem 0 ')};
   color: ${(props) =>
-    props.$selected ? (props.theme as Theme).color.component.tabSelectedText : (props.theme as Theme).color.component.tabUnselectedText};
+    props.$selected ? props.theme.color.component.tabSelectedText : props.theme.color.component.tabUnselectedText};
   background: ${({ theme, $selected }) =>
     $selected
-      ? `linear-gradient(45deg, ${(theme as Theme).color.component.tabSelectedLeftGradient}, ${(theme as Theme).color.component.tabSelectedRightGradient})`
-      : (theme as Theme).color.component.tabUnselected};
+      ? `linear-gradient(45deg, ${theme.color.component.tabSelectedLeftGradient}, ${theme.color.component.tabSelectedRightGradient})`
+      : theme.color.component.tabUnselected};
   border: none;
   transition: background-color 0.2s ease-in-out;
 
   &:hover {
-    background: ${({ theme, $selected }) =>
-      $selected
-        ? `linear-gradient(45deg, ${(theme as Theme).color.component.tabSelectedLeftGradient}, ${(theme as Theme).color.component.tabSelectedRightGradient})`
-        : (theme as Theme).color.component.tabUnselected + 'CC'};
+    background: ${(props) => props.theme.primaryHover}; /* Optional: Change color on hover */
   }
 `;
 

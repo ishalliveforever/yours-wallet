@@ -33,9 +33,8 @@ export const Start = () => {
   const [showStart, setShowStart] = useState(false);
   const { hideMenu, showMenu } = useBottomMenu();
   const { chromeStorageService } = useServiceContext();
-  const current = chromeStorageService.getCurrentAccountObject();
-  const account = current && current.account;
-  const encryptedKeys = account && typeof account.encryptedKeys === 'string' && account.encryptedKeys.length > 0 ? account.encryptedKeys : undefined;
+  const { account } = chromeStorageService.getCurrentAccountObject();
+  const encryptedKeys = account?.encryptedKeys;
 
   useEffect(() => {
     hideMenu();
@@ -51,6 +50,7 @@ export const Start = () => {
       navigate('/bsv-wallet');
       return;
     }
+
     setShowStart(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [encryptedKeys]);

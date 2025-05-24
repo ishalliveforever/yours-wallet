@@ -77,6 +77,7 @@ export const Web3RequestProvider: React.FC<{ children: ReactNode }> = ({ childre
       default:
         break;
     }
+    await ChromeStorageService.prototype.remove(type);
     const chromeStorageService = new ChromeStorageService();
     await chromeStorageService.remove(type);
     const storage = await chromeStorageService.getAndSetStorage();
@@ -128,9 +129,7 @@ export const Web3RequestProvider: React.FC<{ children: ReactNode }> = ({ childre
     <Web3RequestContext.Provider
       value={{
         connectRequest,
-        setConnectRequest, // <-- expose setter
         sendBsvRequest,
-        setSendBsvRequest, // <-- expose setter
         sendBsv20Request,
         sendMNEERequest,
         transferOrdinalRequest,

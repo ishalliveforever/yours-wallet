@@ -9,7 +9,7 @@ import { SettingsRow as AppsRow } from '../components/SettingsRow';
 import { Show } from '../components/Show';
 import { useBottomMenu } from '../hooks/useBottomMenu';
 import { useTheme } from '../hooks/useTheme';
-import { WhiteLabelTheme, Theme } from '../theme.types';
+import { WhiteLabelTheme } from '../theme.types';
 import { BSV_DECIMAL_CONVERSION, YOURS_DEV_WALLET, featuredApps } from '../utils/constants';
 import { formatNumberWithCommasAndDecimals, truncate } from '../utils/format';
 import { BsvSendRequest } from './requests/BsvSendRequest';
@@ -72,7 +72,7 @@ const DiscoverAppsRow = styled.div<WhiteLabelTheme>`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: ${({ theme }) => (theme as Theme).color.global.row};
+  background-color: ${({ theme }) => theme.color.global.row};
   border-radius: 0.5rem;
   padding: 0.5rem;
   margin: 0.25rem;
@@ -99,14 +99,12 @@ const DiscoverAppsText = styled(Text)<WhiteLabelTheme>`
   text-align: left;
 `;
 
-const LockDetailsContainer = styled.div<WhiteLabelTheme>`
+const LockDetailsContainer = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem;
   width: 80%;
-  background-color: ${({ theme }) => (theme as Theme).color.global.row};
-  border-radius: 0.5rem;
 `;
 
 const LockDetailsText = styled(Text)<WhiteLabelTheme>`
@@ -125,14 +123,14 @@ const Dropdown = styled.select<WhiteLabelTheme>`
   margin-bottom: 1rem;
   border-radius: 0.5rem;
   color: ${({ theme }) => theme.color.global.contrast};
-  background-color: ${({ theme }) => (theme as import('../theme.types').Theme).color.global.row};
+  background-color: ${({ theme }) => theme.color.global.row};
   border: 1px solid ${({ theme }) => theme.color.global.gray + '50'};
 `;
 
 const TextArea = styled.textarea<WhiteLabelTheme>`
-  background-color: ${({ theme }) => (theme as Theme).color.global.row};
+  background-color: ${({ theme }) => theme.color.global.row};
   border-radius: 0.5rem;
-  border: 1px solid ${({ theme }) => (theme as Theme).color.global.gray + '50'};
+  border: 1px solid ${({ theme }) => theme.color.global.gray + '50'};
   width: 80%;
   height: 4rem;
   font-size: 0.85rem;
@@ -140,7 +138,7 @@ const TextArea = styled.textarea<WhiteLabelTheme>`
   padding: 1rem;
   margin: 0.5rem;
   outline: none;
-  color: ${({ theme }) => (theme as Theme).color.global.contrast + '80'};
+  color: ${({ theme }) => theme.color.global.contrast + '80'};
   resize: none;
 
   &::placeholder {
@@ -153,7 +151,7 @@ const SweepInfo = styled.div`
   padding: 1rem;
   margin: 1rem 0;
   border-radius: 0.5rem;
-  background-color: ${({ theme }) => (theme as import('../theme.types').Theme).color.global.row};
+  background-color: ${({ theme }) => theme.color.global.row};
 `;
 
 type AppsPage =

@@ -4,31 +4,162 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Yours Wallet Browser</title>
-  <style>
-    body { font-family: sans-serif; margin: 0; padding: 0; background: #181A20; color: #fff; }
-    #browser-bar { display: flex; padding: 0.5rem; background: #23242A; border-bottom: 1px solid #222; }
-    #url-input { flex: 1; font-size: 1rem; padding: 0.5rem; border-radius: 6px; border: 1px solid #333; background: #23242A; color: #fff; }
-    #go-btn { font-size: 1rem; padding: 0.5rem 1rem; margin-left: 0.5rem; border-radius: 6px; background: #222; color: #fff; border: none; }
-    #browser-frame { width: 100vw; height: calc(100vh - 48px); border: none; }
-  </style>
+  <link rel="stylesheet" href="browser-multitab.css" />
 </head>
 <body>
   <form id="browser-bar" onsubmit="return false;">
     <input id="url-input" type="text" placeholder="Enter URL (e.g. https://...)" />
     <button id="go-btn">Go</button>
+    <button id="new-tab-btn" type="button">New Tab</button>
+    <button id="home-btn" type="button">Home</button>
   </form>
-  <iframe id="browser-frame"></iframe>
+  <div id="tabs-bar"></div>
+  <div id="home-screen" style="display:none;">
+    <h2>Welcome to Yours Wallet Browser</h2>
+    <div id="recent-sites">
+      <h3>Recent Sites</h3>
+      <div id="recent-sites-list"></div>
+    </div>
+  </div>
+  <iframe id="browser-frame" style="display:none;"></iframe>
   <script>
+    // --- State ---
+    let tabs = JSON.parse(localStorage.getItem('yoursWalletTabs') || '[]');
+    let activeTabIdx = parseInt(localStorage.getItem('yoursWalletActiveTabIdx') || '0', 10);
+    let recentSites = JSON.parse(localStorage.getItem('yoursWalletRecentSites') || '[]');
+
     const input = document.getElementById('url-input');
-    const btn = document.getElementById('go-btn');
+    const goBtn = document.getElementById('go-btn');
+    const newTabBtn = document.getElementById('new-tab-btn');
+    const homeBtn = document.getElementById('home-btn');
     const frame = document.getElementById('browser-frame');
+    const tabsBar = document.getElementById('tabs-bar');
+    const homeScreen = document.getElementById('home-screen');
+    const recentSitesList = document.getElementById('recent-sites-list');
+
+    function saveTabs() {
+      localStorage.setItem('yoursWalletTabs', JSON.stringify(tabs));
+      localStorage.setItem('yoursWalletActiveTabIdx', activeTabIdx);
+    }
+    function saveRecentSites() {
+      localStorage.setItem('yoursWalletRecentSites', JSON.stringify(recentSites));
+    }
+    function addRecentSite(url) {
+      if (!recentSites.includes(url)) {
+        recentSites.unshift(url);
+        if (recentSites.length > 10) recentSites = recentSites.slice(0, 10);
+        saveRecentSites();
+      }
+    }
+    function renderTabs() {
+      tabsBar.innerHTML = '';
+      tabs.forEach((tab, idx) => {
+        const tabBtn = document.createElement('button');
+        tabBtn.className = 'tab' + (idx === activeTabIdx ? ' active' : '');
+        tabBtn.textContent = tab.title || tab.url || 'New Tab';
+        tabBtn.onclick = () => switchTab(idx);
+        // Close button
+        const closeBtn = document.createElement('span');
+        closeBtn.className = 'close-btn';
+        closeBtn.textContent = '×';
+        closeBtn.onclick = (e) => { e.stopPropagation(); closeTab(idx); };
+        tabBtn.appendChild(closeBtn);
+        tabsBar.appendChild(tabBtn);
+      });
+    }
+    function renderRecentSites() {
+      recentSitesList.innerHTML = '';
+      if (recentSites.length === 0) {
+        recentSitesList.innerHTML = '<em>No recent sites</em>';
+        return;
+      }
+      recentSites.forEach(url => {
+        const link = document.createElement('span');
+        link.className = 'recent-site-link';
+        link.textContent = url;
+        link.onclick = () => openUrlInNewTab(url);
+        recentSitesList.appendChild(link);
+      });
+    }
+    function switchTab(idx) {
+      activeTabIdx = idx;
+      saveTabs();
+      showTab();
+    }
+    function closeTab(idx) {
+      tabs.splice(idx, 1);
+      if (activeTabIdx >= tabs.length) activeTabIdx = tabs.length - 1;
+      if (tabs.length === 0) {
+        showHome();
+      } else {
+        saveTabs();
+        showTab();
+      }
+    }
+    function openUrlInNewTab(url) {
+      tabs.push({ url, title: url });
+      activeTabIdx = tabs.length - 1;
+      saveTabs();
+      showTab();
+    }
+    function showTab() {
+      if (!tabs.length) return showHome();
+      const tab = tabs[activeTabIdx];
+      input.value = tab.url || '';
+      frame.style.display = '';
+      homeScreen.style.display = 'none';
+      frame.src = tab.url || '';
+      renderTabs();
+    }
+    function showHome() {
+      frame.style.display = 'none';
+      homeScreen.style.display = '';
+      renderTabs();
+      renderRecentSites();
+    }
     function navigate() {
       let url = input.value.trim();
       if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      frame.src = url;
+      if (!tabs.length) {
+        tabs.push({ url, title: url });
+        activeTabIdx = 0;
+      } else {
+        tabs[activeTabIdx].url = url;
+        tabs[activeTabIdx].title = url;
+      }
+      addRecentSite(url);
+      saveTabs();
+      showTab();
     }
-    btn.onclick = navigate;
+    goBtn.onclick = navigate;
     input.addEventListener('keydown', function(e) { if (e.key === 'Enter') navigate(); });
+    newTabBtn.onclick = function() {
+      tabs.push({ url: '', title: 'New Tab' });
+      activeTabIdx = tabs.length - 1;
+      saveTabs();
+      showTab();
+    };
+    homeBtn.onclick = function() {
+      showHome();
+    };
+    frame.onload = function() {
+      try {
+        const url = frame.contentWindow.location.href;
+        if (tabs[activeTabIdx]) {
+          tabs[activeTabIdx].url = url;
+          tabs[activeTabIdx].title = url;
+          addRecentSite(url);
+          saveTabs();
+          renderTabs();
+        }
+      } catch (e) {}
+    };
+    // Initial load
+    if (tabs.length) {
+      showTab();
+    } else {
+      showHome();
+    }
   </script>
 </body>
 </html>

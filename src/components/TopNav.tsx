@@ -10,7 +10,7 @@ import { useSnackbar } from '../hooks/useSnackbar';
 import { useServiceContext } from '../hooks/useServiceContext';
 import copyIcon from '../assets/copy.svg';
 import switchIcon from '../assets/chevrons.svg';
-import { WhiteLabelTheme, Theme } from '../theme.types';
+import { WhiteLabelTheme } from '../theme.types';
 import { useNavigate } from 'react-router-dom';
 import { useBottomMenu } from '../hooks/useBottomMenu';
 
@@ -70,7 +70,7 @@ const DropdownItem = styled.div`
   cursor: pointer;
 
   &:hover {
-    background: ${({ theme }) => (theme as Theme).color.global.contrast + '10'};
+    background: ${({ theme }) => theme.color.global.contrast + '10'};
   }
 `;
 
