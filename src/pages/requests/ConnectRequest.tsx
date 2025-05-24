@@ -13,6 +13,7 @@ import { sendMessage } from '../../utils/chromeHelpers';
 import { useServiceContext } from '../../hooks/useServiceContext';
 import { ChromeStorageObject } from '../../services/types/chromeStorage.types';
 import { sleep } from '../../utils/sleep';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const Container = styled.div`
   display: flex;
@@ -63,6 +64,21 @@ export const ConnectRequest = (props: ConnectRequestProps) => {
   const { addSnackbar } = useSnackbar();
   const { keysService, chromeStorageService } = useServiceContext();
   const { identityPubKey, bsvPubKey, ordPubKey, identityAddress } = keysService;
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Parse request and returnUrl from URL if not provided
+  let urlRequest = request;
+  let urlReturn = '';
+  try {
+    const params = new URLSearchParams(location.search);
+    if (!urlRequest && params.get('request')) {
+      urlRequest = JSON.parse(decodeURIComponent(params.get('request')!));
+    }
+    urlReturn = params.get('returnUrl') ? decodeURIComponent(params.get('returnUrl')!) : '';
+  } catch (e) {
+    // Intentionally left blank (non-localhost or missing keys)
+  }
 
   useEffect(() => {
     if (!context) return;
@@ -107,41 +123,70 @@ export const ConnectRequest = (props: ConnectRequestProps) => {
     await chromeStorageService.updateNested(key, update);
     addSnackbar(`Approved`, 'success');
     await sleep(2000);
-    onDecision();
+    onDecision(); // <-- clear connectRequest state immediately
     sendMessage({
       action: 'userConnectResponse',
       decision: 'approved',
       pubKeys: { bsvPubKey, ordPubKey, identityPubKey },
     });
+    // Send postMessage to opener for dApp integration
+    if (window.opener) {
+      window.opener.postMessage({ type: 'WALLET_CONNECTED', address: account.addresses.bsvAddress }, '*');
+    }
+    setTimeout(() => {
+      if (window.opener) {
+        window.close(); // Close popup if opened as one
+      } else if (urlReturn) {
+        // Redirect back to dApp with result
+        const resultUrl = new URL(urlReturn);
+        resultUrl.searchParams.set('result', 'approved');
+        resultUrl.searchParams.set('address', account.addresses.bsvAddress);
+        window.location.href = resultUrl.toString();
+      } else if (window.location.pathname === '/connect') {
+        navigate('/bsv-wallet');
+      }
+    }, 300);
   };
 
   const handleDecline = async () => {
-    onDecision();
+    onDecision(); // <-- clear connectRequest state immediately
     sendMessage({
       action: 'userConnectResponse',
       decision: 'declined',
     });
     addSnackbar(`Declined`, 'error');
+    setTimeout(() => {
+      if (window.opener) {
+        window.close();
+      } else if (urlReturn) {
+        // Redirect back to dApp with result
+        const resultUrl = new URL(urlReturn);
+        resultUrl.searchParams.set('result', 'declined');
+        window.location.href = resultUrl.toString();
+      } else if (window.location.pathname === '/connect') {
+        navigate('/bsv-wallet');
+      }
+    }, 300);
   };
 
   return (
     <Show
-      when={!request?.isAuthorized}
+      when={!urlRequest?.isAuthorized}
       whenFalseContent={
         <Container>
           <Text theme={theme} style={{ fontSize: '1.5rem', fontWeight: 700 }}>
-            Reconnecting to {request?.appName} ...
+            Reconnecting to {urlRequest?.appName} ...
           </Text>
         </Container>
       }
     >
       <Container>
-        <Icon size="5rem" src={request?.appIcon} />
+        <Icon size="5rem" src={urlRequest?.appIcon} />
         <HeaderText theme={theme} style={{ width: '90%' }}>
-          {request?.appName}
+          {urlRequest?.appName}
         </HeaderText>
         <Text theme={theme} style={{ marginBottom: '1rem' }}>
-          {request?.domain}
+          {urlRequest?.domain}
         </Text>
         <PermissionsContainer theme={theme}>
           <Permission>

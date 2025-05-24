@@ -126,7 +126,9 @@ export const BottomMenu = (props: BottomMenuProps) => {
         label="Browser"
         theme={theme}
         icon={FaGlobe}
-        onClick={() => window.open('/browser.html', '_blank')}
+        onClick={() => {
+          window.open('/browser.html', '_blank');
+        }}
         opacity={selected === 'browser' ? 1 : 0.6}
       />
     </Container>

@@ -138,6 +138,7 @@
       activeTabIdx = tabs.length - 1;
       saveTabs();
       showTab();
+      setTimeout(() => input.focus(), 100);
     };
     homeBtn.onclick = function() {
       showHome();

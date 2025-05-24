@@ -38,6 +38,11 @@ import { QueueProvider } from './contexts/providers/QueueProvider';
 import { BottomMenuProvider } from './contexts/providers/BottomMenuProvider';
 import { SnackbarProvider } from './contexts/providers/SnackbarProvider';
 import { MNEESendRequest } from './pages/requests/MNEESendRequest';
+import { Modal } from './components/Modal';
+import { useWalletConnectMessaging } from './hooks/useWalletConnectMessaging';
+import { Button } from './components/Button';
+import { DappBrowser } from './pages/DappBrowser';
+import { DappFullPage } from './pages/DappFullPage';
 
 const MainContainer = styled.div<WhiteLabelTheme & { $isMobile?: boolean }>`
   display: flex;
@@ -100,7 +105,9 @@ export const App = () => {
   const menuContext = useContext(BottomMenuContext);
   const {
     connectRequest,
+    setConnectRequest, // <-- get setter
     sendBsvRequest,
+    setSendBsvRequest, // <-- add this line
     sendBsv20Request,
     sendMNEERequest,
     transferOrdinalRequest,
@@ -116,6 +123,18 @@ export const App = () => {
     getStorageAndSetRequestState,
   } = useWeb3RequestContext();
   const [whitelistedApps, setWhitelistedApps] = useState<WhitelistedApp[]>([]);
+
+  // Get current account address for wallet connect
+  let walletAddress: string | undefined = undefined;
+  try {
+    const current = chromeStorageService.getCurrentAccountObject();
+    walletAddress = current?.account?.addresses?.bsvAddress;
+  } catch (e) {
+    walletAddress = undefined;
+  }
+
+  // Wallet connect messaging hook
+  const { pendingRequest, approve, deny } = useWalletConnectMessaging(walletAddress);
 
   useEffect(() => {
     if (isReady) {
@@ -142,6 +161,143 @@ export const App = () => {
     }
   }, [transferOrdinalRequest, purchaseOrdinalRequest, menuContext]);
 
+  // Listen for CONNECT_REQUEST postMessages and set connectRequest if on /connect
+  useEffect(() => {
+    function handleConnectMessage(event: MessageEvent) {
+      if (
+        window.location.pathname === '/connect' &&
+        event.data &&
+        typeof event.data === 'object' &&
+        event.data.type === 'CONNECT_REQUEST' &&
+        !connectRequest // Only set if not already pending
+      ) {
+        setConnectRequest({
+          appName: event.data.appName || 'External dApp',
+          appIcon: event.data.appIcon || '',
+          domain: event.origin,
+          isAuthorized: false,
+        });
+      }
+    }
+    window.addEventListener('message', handleConnectMessage);
+    return () => window.removeEventListener('message', handleConnectMessage);
+  }, [setConnectRequest, connectRequest]);
+
+  // Listen for GET_BALANCE postMessages and respond with balance, then close the popup
+  useEffect(() => {
+    function handleGetBalanceMessage(event: MessageEvent) {
+      if (
+        event.data &&
+        typeof event.data === 'object' &&
+        event.data.type === 'GET_BALANCE' &&
+        event.data.address
+      ) {
+        // Get balance for the requested address
+        const { address } = event.data;
+        try {
+          const current = chromeStorageService.getCurrentAccountObject();
+          const account = current?.account;
+          if (account && account.addresses.bsvAddress === address) {
+            const balance = account.balance?.bsv ?? 0;
+            (event.source as Window)?.postMessage({ type: 'WALLET_BALANCE', balance }, '*');
+          } else {
+            (event.source as Window)?.postMessage({ type: 'WALLET_BALANCE', balance: 0 }, '*');
+          }
+        } catch (e) {
+          (event.source as Window)?.postMessage({ type: 'WALLET_BALANCE', balance: 0 }, '*');
+        }
+        setTimeout(() => {
+          if (window.opener) window.close();
+        }, 300);
+      }
+    }
+    window.addEventListener('message', handleGetBalanceMessage);
+    return () => window.removeEventListener('message', handleGetBalanceMessage);
+  }, [chromeStorageService]);
+
+  // Ensure connectRequest is set from URL param if on /connect and not already set
+  useEffect(() => {
+    if (window.location.pathname === '/connect' && !connectRequest) {
+      const params = new URLSearchParams(window.location.search);
+      const reqParam = params.get('request');
+      if (reqParam) {
+        try {
+          const parsed = JSON.parse(decodeURIComponent(reqParam));
+          setConnectRequest({
+            appName: parsed.appName || 'External dApp',
+            appIcon: parsed.appIcon || '',
+            domain: parsed.origin || '',
+            isAuthorized: false,
+          });
+        } catch (e) {
+          // ignore
+        }
+      }
+    }
+  }, [connectRequest, setConnectRequest]);
+
+  // Listen for SEND_BSV postMessages and set sendBsvRequest
+  useEffect(() => {
+    function handleSendBsvMessage(event: MessageEvent) {
+      if (
+        event.data &&
+        typeof event.data === 'object' &&
+        event.data.type === 'SEND_BSV' &&
+        event.data.to && event.data.amount
+      ) {
+        // Set the sendBsvRequest state with the correct format
+        setSendBsvRequest([
+          {
+            address: event.data.to,
+            satoshis: Number(event.data.amount),
+          },
+        ]);
+      }
+    }
+    window.addEventListener('message', handleSendBsvMessage);
+    return () => window.removeEventListener('message', handleSendBsvMessage);
+  }, [setSendBsvRequest]);
+
+  // Navigate to /connect when sendBsvRequest is set
+  useEffect(() => {
+    if (sendBsvRequest && sendBsvRequest.length > 0) {
+      window.location.pathname !== '/connect' && window.location.assign('/connect');
+    }
+  }, [sendBsvRequest]);
+
+  // Listen for GET_SOCIAL_PROFILE postMessages and respond with social profile, then close the popup
+  useEffect(() => {
+    function handleGetSocialProfileMessage(event: MessageEvent) {
+      if (
+        event.data &&
+        typeof event.data === 'object' &&
+        (event.data.type === 'GET_SOCIAL_PROFILE' || event.data.type === 'getSocialProfile')
+      ) {
+        try {
+          const current = chromeStorageService.getCurrentAccountObject();
+          const account = current?.account;
+          const profile = account?.settings?.socialProfile || { displayName: 'Anonymous', avatar: '' };
+          (event.source as Window)?.postMessage({
+            type: 'getSocialProfile',
+            success: true,
+            data: profile,
+          }, '*');
+        } catch (e) {
+          (event.source as Window)?.postMessage({
+            type: 'getSocialProfile',
+            success: false,
+            error: 'Could not load social profile',
+          }, '*');
+        }
+        setTimeout(() => {
+          if (window.opener) window.close();
+        }, 300);
+      }
+    }
+    window.addEventListener('message', handleGetSocialProfileMessage);
+    return () => window.removeEventListener('message', handleGetSocialProfileMessage);
+  }, [chromeStorageService]);
+
   // Determine if a wallet/account exists
   let hasWalletOrAccount = false;
   try {
@@ -153,168 +309,65 @@ export const App = () => {
 
   if (!isReady) {
     return (
-      <MainContainer $isMobile={isMobile} theme={theme}>
-        <PageLoader message="Loading..." theme={theme} />
-      </MainContainer>
+      <Router>
+        <MainContainer $isMobile={isMobile} theme={theme}>
+          <PageLoader message="Loading..." theme={theme} />
+        </MainContainer>
+      </Router>
     );
   }
 
   return (
-    <MainContainer $isMobile={isMobile} theme={theme}>
-      <BlockHeightProvider>
-        <QueueProvider>
-          <BottomMenuProvider network={chromeStorageService.getNetwork()}>
-            <Container theme={theme}>
-              <SnackbarProvider>
-                {/* <SyncingBlocks /> removed per user request */}
-                <Show when={!isLocked} whenFalseContent={<UnlockWallet onUnlock={handleUnlock} />}>
-                  <Router>
+    <Router>
+      <MainContainer $isMobile={isMobile} theme={theme}>
+        <BlockHeightProvider>
+          <QueueProvider>
+            <BottomMenuProvider network={chromeStorageService.getNetwork()}>
+              <Container theme={theme}>
+                <SnackbarProvider>
+                  {/* Wallet Connect Modal */}
+                  <Modal open={!!pendingRequest} onClose={() => deny()}>
+                    <h2>Connect to Site</h2>
+                    <p style={{ margin: '1rem 0' }}>
+                      {pendingRequest ? (
+                        <>
+                          <b>Origin:</b> {pendingRequest.origin}
+                        </>
+                      ) : null}
+                    </p>
+                    <Button theme={theme} type="primary" label="Approve" onClick={approve} />
+                    <Button theme={theme} type="secondary" label="Deny" onClick={() => deny()} />
+                  </Modal>
+                  {/* Payment Approval Modal */}
+                  <Modal open={!!sendBsvRequest && sendBsvRequest.length > 0} onClose={() => clearRequest('sendBsvRequest')}>
+                    {sendBsvRequest && sendBsvRequest.length > 0 && (
+                      <BsvSendRequest request={sendBsvRequest} popupId={popupId} onResponse={() => clearRequest('sendBsvRequest')} />
+                    )}
+                  </Modal>
+                  <Show when={!isLocked} whenFalseContent={<UnlockWallet onUnlock={handleUnlock} />}>
                     <Routes>
-                      <Route path="/" element={<Start />} />
-                      <Route path="/create-wallet" element={<CreateAccount onNavigateBack={() => null} newWallet />} />
-                      <Route
-                        path="/restore-wallet"
-                        element={<RestoreAccount onNavigateBack={() => null} newWallet />}
-                      />
-                      <Route path="/import-wallet" element={<ImportAccount onNavigateBack={() => null} newWallet />} />
-                      <Route path="/master-restore" element={<MasterRestore />} />
-                      <Route
-                        path="/connect"
-                        element={
-                          <ConnectRequest
-                            request={connectRequest}
-                            onDecision={() => clearRequest('connectRequest')}
-                            whiteListedApps={whitelistedApps}
-                            popupId={popupId}
-                          />
-                        }
-                      />
-                      <Route
-                        path="/bsv-wallet"
-                        element={
-                          <Show
-                            when={
-                              !sendBsvRequest &&
-                              !sendBsv20Request &&
-                              !sendMNEERequest &&
-                              !signMessageRequest &&
-                              !broadcastRequest &&
-                              !getSignaturesRequest &&
-                              !generateTaggedKeysRequest &&
-                              !encryptRequest &&
-                              !decryptRequest
-                            }
-                            whenFalseContent={
-                              <>
-                                <Show when={!!sendBsvRequest}>
-                                  <BsvSendRequest
-                                    request={sendBsvRequest!}
-                                    onResponse={() => clearRequest('sendBsvRequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                                <Show when={!!sendBsv20Request}>
-                                  <Bsv20SendRequest
-                                    request={sendBsv20Request!}
-                                    onResponse={() => clearRequest('sendBsv20Request')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                                <Show when={!!sendMNEERequest}>
-                                  <MNEESendRequest
-                                    request={sendMNEERequest!}
-                                    onResponse={() => clearRequest('sendMNEERequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                                <Show when={!!signMessageRequest}>
-                                  <SignMessageRequest
-                                    request={signMessageRequest!}
-                                    onSignature={() => clearRequest('signMessageRequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                                <Show when={!!broadcastRequest}>
-                                  <BroadcastRequest
-                                    request={broadcastRequest!}
-                                    onBroadcast={() => clearRequest('broadcastRequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                                <Show when={!!getSignaturesRequest}>
-                                  <GetSignaturesRequest
-                                    request={getSignaturesRequest!}
-                                    onSignature={() => clearRequest('getSignaturesRequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                                <Show when={!!generateTaggedKeysRequest}>
-                                  <GenerateTaggedKeysRequest
-                                    request={generateTaggedKeysRequest!}
-                                    onResponse={() => clearRequest('generateTaggedKeysRequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                                <Show when={!!encryptRequest}>
-                                  <EncryptRequest
-                                    request={encryptRequest!}
-                                    onEncrypt={() => clearRequest('encryptRequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                                <Show when={!!decryptRequest}>
-                                  <DecryptRequest
-                                    request={decryptRequest!}
-                                    onDecrypt={() => clearRequest('decryptRequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                              </>
-                            }
-                          >
-                            <BsvWallet isOrdRequest={!!transferOrdinalRequest || !!purchaseOrdinalRequest} />
-                          </Show>
-                        }
-                      />
-                      <Route
-                        path="/ord-wallet"
-                        element={
-                          <Show
-                            when={!transferOrdinalRequest && !purchaseOrdinalRequest}
-                            whenFalseContent={
-                              <>
-                                <Show when={!!purchaseOrdinalRequest}>
-                                  <OrdPurchaseRequest
-                                    request={purchaseOrdinalRequest!}
-                                    onResponse={() => clearRequest('purchaseOrdinalRequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                                <Show when={!!transferOrdinalRequest}>
-                                  <OrdTransferRequest
-                                    request={transferOrdinalRequest!}
-                                    onResponse={() => clearRequest('transferOrdinalRequest')}
-                                    popupId={popupId}
-                                  />
-                                </Show>
-                              </>
-                            }
-                          >
-                            <OrdWallet />
-                          </Show>
-                        }
-                      />
+                      <Route path="/bsv-wallet" element={<BsvWallet isOrdRequest={!!transferOrdinalRequest || !!purchaseOrdinalRequest} />} />
+                      <Route path="/ord-wallet" element={<OrdWallet />} />
                       <Route path="/tools" element={<AppsAndTools />} />
                       <Route path="/settings" element={<Settings />} />
-                      {/* /browser route removed: browser.html is only opened in a new tab from the menu */}
+                      <Route path="/browser" element={<DappBrowser />} />
+                      <Route path="/create-wallet" element={<CreateAccount onNavigateBack={() => null} newWallet />} />
+                      <Route path="/restore-wallet" element={<RestoreAccount onNavigateBack={() => null} newWallet />} />
+                      <Route path="/import-wallet" element={<ImportAccount onNavigateBack={() => null} newWallet />} />
+                      <Route path="/master-restore" element={<MasterRestore />} />
+                      <Route path="/connect" element={
+                        <ConnectRequest request={connectRequest} onDecision={() => clearRequest('connectRequest')} whiteListedApps={whitelistedApps} popupId={popupId} />
+                      } />
+                      <Route path="/browser/view" element={<DappFullPage />} />
+                      <Route path="/" element={<Start />} />
                     </Routes>
-                  </Router>
-                </Show>
-              </SnackbarProvider>
-            </Container>
-          </BottomMenuProvider>
-        </QueueProvider>
-      </BlockHeightProvider>
-    </MainContainer>
+                  </Show>
+                </SnackbarProvider>
+              </Container>
+            </BottomMenuProvider>
+          </QueueProvider>
+        </BlockHeightProvider>
+      </MainContainer>
+    </Router>
   );
 };

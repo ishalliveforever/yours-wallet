@@ -94,11 +94,21 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
 
       if (validationErrorMessage) {
         addSnackbar(validationErrorMessage, 'error');
+        // Send error to opener and close popup
+        if (!requestWithinApp && window.opener) {
+          window.opener.postMessage({ type: 'SEND_BSV_RESULT', success: false, error: validationErrorMessage }, '*');
+          setTimeout(() => window.close(), 300);
+        }
         return;
       }
 
       if (request[0].address && !request[0].satoshis) {
         addSnackbar('No sats supplied', 'info');
+        // Send error to opener and close popup
+        if (!requestWithinApp && window.opener) {
+          window.opener.postMessage({ type: 'SEND_BSV_RESULT', success: false, error: 'No sats supplied' }, '*');
+          setTimeout(() => window.close(), 300);
+        }
         return;
       }
 
@@ -112,6 +122,11 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
 
       if (!sendRes.txid || sendRes.error) {
         addSnackbar(getErrorMessage(sendRes.error), 'error');
+        // Send error to opener and close popup
+        if (!requestWithinApp && window.opener) {
+          window.opener.postMessage({ type: 'SEND_BSV_RESULT', success: false, error: getErrorMessage(sendRes.error) }, '*');
+          setTimeout(() => window.close(), 300);
+        }
         return;
       }
 
@@ -121,6 +136,12 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
       onResponse();
 
       if (!requestWithinApp) {
+        // Send success to opener and close popup
+        if (window.opener) {
+          window.opener.postMessage({ type: 'SEND_BSV_RESULT', success: true, txid: sendRes.txid }, '*');
+          setTimeout(() => window.close(), 300);
+        }
+        // Still send legacy message for compatibility
         sendMessage({
           action: 'sendBsvResponse',
           txid: sendRes.txid,
@@ -129,6 +150,15 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
       }
     } catch (error) {
       console.log(error);
+      // Send error to opener and close popup
+      if (!requestWithinApp && window.opener) {
+        let errorMsg = 'Unknown error';
+        if (error && typeof error === 'object' && 'message' in error && typeof (error as any).message === 'string') {
+          errorMsg = (error as any).message;
+        }
+        window.opener.postMessage({ type: 'SEND_BSV_RESULT', success: false, error: errorMsg }, '*');
+        setTimeout(() => window.close(), 300);
+      }
     } finally {
       setIsProcessing(false);
     }
@@ -205,7 +235,7 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
       </Show>
       <Show when={!isProcessing && !!request && !hasSent}>
         <Wrapper>
-          <HeaderText theme={theme}>Approve Request</HeaderText>
+          <HeaderText theme={theme}>Approve Payment</HeaderText>
           <Text
             theme={theme}
             style={{ cursor: 'pointer', margin: '0.75rem 0' }}
@@ -224,7 +254,7 @@ export const BsvSendRequest = (props: BsvSendRequestProps) => {
             <Button
               theme={theme}
               type="primary"
-              label={`Approve ${request.reduce((a, item) => a + item.satoshis, 0) / BSV_DECIMAL_CONVERSION} BSV`}
+              label={`Pay ${request.reduce((a, item) => a + item.satoshis, 0) / BSV_DECIMAL_CONVERSION} BSV to Unlock`}
               disabled={isProcessing}
               isSubmit
             />

@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/browser.html", "destination": "/browser.html" }
+  ]
+}
