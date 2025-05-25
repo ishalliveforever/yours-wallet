@@ -36,6 +36,7 @@
     "promise-queue-manager": "^3.0.5",
     "qrcode": "^1.5.3",
     "react": "^18.2.0",
+    "react-app-rewired": "^2.2.1",
     "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
     "react-icons": "5.2.0",
@@ -86,7 +87,6 @@
     "crypto-browserify": "^3.12.0",
     "husky": "^9.1.6",
     "prettier": "^3.3.2",
-    "process": "^0.11.10",
-    "react-app-rewired": "^2.2.1"
+    "process": "^0.11.10"
   }
 }
