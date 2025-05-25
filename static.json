@@ -1,5 +1,17 @@
 {
   "rewrites": [
-    { "source": "/browser.html", "destination": "/browser.html" }
+    { "source": "/browser.html", "destination": "/browser.html" },
+    { "source": "/connect", "destination": "/index.html" },
+    { "source": "/bsv-wallet", "destination": "/index.html" },
+    { "source": "/ord-wallet", "destination": "/index.html" },
+    { "source": "/tools", "destination": "/index.html" },
+    { "source": "/settings", "destination": "/index.html" },
+    { "source": "/browser", "destination": "/index.html" },
+    { "source": "/browser/view", "destination": "/index.html" },
+    { "source": "/restore-wallet", "destination": "/index.html" },
+    { "source": "/import-wallet", "destination": "/index.html" },
+    { "source": "/create-wallet", "destination": "/index.html" },
+    { "source": "/master-restore", "destination": "/index.html" },
+    { "source": "/", "destination": "/index.html" }
   ]
 }
