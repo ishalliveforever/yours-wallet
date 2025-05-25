@@ -1,5 +1,5 @@
 {
-  "rewrites": [
+  "routes": [
     { "source": "/browser.html", "destination": "/browser.html" },
     { "source": "/connect", "destination": "/index.html" },
     { "source": "/bsv-wallet", "destination": "/index.html" },
