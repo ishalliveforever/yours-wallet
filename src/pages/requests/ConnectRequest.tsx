@@ -121,6 +121,21 @@ export const ConnectRequest = (props: ConnectRequestProps) => {
       },
     };
     await chromeStorageService.updateNested(key, update);
+    // Sync whitelist to localStorage for browser hamburger menu
+    const newWhitelist = [
+      ...whiteListedApps,
+      {
+        domain: request?.domain ?? '',
+        icon: request?.appIcon ?? '',
+      },
+    ];
+    // Store as array of { url, favicon } for browser.html
+    localStorage.setItem(
+      'yoursWalletConnectedSites',
+      JSON.stringify(
+        newWhitelist.map(app => ({ url: app.domain, favicon: app.icon }))
+      )
+    );
     addSnackbar(`Approved`, 'success');
     await sleep(2000);
     onDecision(); // <-- clear connectRequest state immediately

@@ -4,163 +4,249 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Yours Wallet Browser</title>
-  <link rel="stylesheet" href="browser-multitab.css" />
+  <style>
+    body { font-family: sans-serif; margin: 0; padding: 0; background: #181A20; color: #fff; }
+    #browser-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      padding: 0.25rem 0.5rem;
+      background: #23242A;
+      border-bottom: 1px solid #222;
+      min-height: 38px;
+      gap: 0.25rem;
+    }
+    #url-input {
+      flex: 1;
+      font-size: 0.95rem;
+      padding: 0.35rem 0.5rem;
+      border-radius: 5px;
+      border: 1px solid #333;
+      background: #23242A;
+      color: #fff;
+      min-width: 0;
+      max-width: 100%;
+      margin-right: 0.25rem;
+    }
+    #go-btn, #back-to-apps-btn, #clear-history-btn {
+      font-size: 0.95rem;
+      padding: 0.35rem 0.8rem;
+      margin-left: 0.15rem;
+      border-radius: 6px;
+      background: #222;
+      color: #fff;
+      border: 1px solid #333;
+      min-width: 0;
+      white-space: nowrap;
+      box-shadow: 0 2px 12px #000a;
+      position: static;
+      display: none;
+    }
+    #go-btn { display: inline-block; }
+    #back-to-apps-btn { display: none; }
+    #clear-history-btn { display: none; }
+    #browser-frame { width: 100vw; height: calc(100vh - 48px); border: none; display: none; }
+    #recent-apps {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      justify-content: flex-start;
+      align-items: flex-start;
+      padding: 2rem 1.5rem;
+      min-height: calc(100vh - 48px);
+      background: #181A20;
+    }
+    .recent-app-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 88px;
+      margin: 0.5rem 0.5rem 0.5rem 0;
+      cursor: pointer;
+      text-align: center;
+      border-radius: 12px;
+      transition: background 0.2s;
+      padding: 0.5rem 0.25rem 0.25rem 0.25rem;
+      background: #23242A;
+    }
+    .recent-app-item:hover {
+      background: #222;
+    }
+    .recent-app-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      background: #333;
+      margin-bottom: 0.5rem;
+      object-fit: cover;
+      border: 1px solid #444;
+      box-shadow: 0 1px 4px #0006;
+      display: block;
+    }
+    .recent-app-label {
+      color: #fff;
+      font-size: 0.95rem;
+      word-break: break-all;
+      margin-top: 0.1rem;
+      max-width: 80px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    @media (max-width: 600px) {
+      #browser-bar {
+        flex-wrap: wrap;
+        gap: 0.15rem;
+        padding: 0.15rem 0.2rem;
+      }
+      #url-input {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.3rem;
+      }
+      #go-btn, #back-to-apps-btn, #clear-history-btn {
+        font-size: 0.85rem;
+        padding: 0.25rem 0.5rem;
+        margin-left: 0.1rem;
+      }
+      #recent-apps { justify-content: center; padding: 1rem 0.2rem; }
+      .recent-app-item { width: 80px; }
+      .recent-app-label { max-width: 70px; font-size: 0.85rem; }
+    }
+  </style>
 </head>
 <body>
   <form id="browser-bar" onsubmit="return false;">
     <input id="url-input" type="text" placeholder="Enter URL (e.g. https://...)" />
     <button id="go-btn">Go</button>
-    <button id="new-tab-btn" type="button">New Tab</button>
-    <button id="home-btn" type="button">Home</button>
+    <button id="back-to-apps-btn" type="button">Back to Apps</button>
+    <button id="clear-history-btn" type="button">Clear History</button>
   </form>
-  <div id="tabs-bar"></div>
-  <div id="home-screen" style="display:none;">
-    <h2>Welcome to Yours Wallet Browser</h2>
-    <div id="recent-sites">
-      <h3>Recent Sites</h3>
-      <div id="recent-sites-list"></div>
-    </div>
-  </div>
-  <iframe id="browser-frame" style="display:none;"></iframe>
+  <div id="recent-apps"></div>
+  <iframe id="browser-frame"></iframe>
   <script>
-    // --- State ---
-    let tabs = JSON.parse(localStorage.getItem('yoursWalletTabs') || '[]');
-    let activeTabIdx = parseInt(localStorage.getItem('yoursWalletActiveTabIdx') || '0', 10);
-    let recentSites = JSON.parse(localStorage.getItem('yoursWalletRecentSites') || '[]');
-
     const input = document.getElementById('url-input');
-    const goBtn = document.getElementById('go-btn');
-    const newTabBtn = document.getElementById('new-tab-btn');
-    const homeBtn = document.getElementById('home-btn');
+    const btn = document.getElementById('go-btn');
     const frame = document.getElementById('browser-frame');
-    const tabsBar = document.getElementById('tabs-bar');
-    const homeScreen = document.getElementById('home-screen');
-    const recentSitesList = document.getElementById('recent-sites-list');
+    const recentApps = document.getElementById('recent-apps');
+    const backBtn = document.getElementById('back-to-apps-btn');
+    const clearBtn = document.getElementById('clear-history-btn');
 
-    function saveTabs() {
-      localStorage.setItem('yoursWalletTabs', JSON.stringify(tabs));
-      localStorage.setItem('yoursWalletActiveTabIdx', activeTabIdx);
+    function getRecentSites() {
+      try {
+        // Expects array of { url, favicon }
+        return JSON.parse(localStorage.getItem('yoursWalletConnectedSites') || '[]');
+      } catch (e) { return []; }
     }
-    function saveRecentSites() {
-      localStorage.setItem('yoursWalletRecentSites', JSON.stringify(recentSites));
+    function getFaviconForUrl(url) {
+      try {
+        const u = new URL(url);
+        return u.origin + '/favicon.ico';
+      } catch (e) { return '' }
     }
-    function addRecentSite(url) {
-      if (!recentSites.includes(url)) {
-        recentSites.unshift(url);
-        if (recentSites.length > 10) recentSites = recentSites.slice(0, 10);
-        saveRecentSites();
-      }
+    function getDomain(url) {
+      try {
+        return new URL(url).hostname.replace(/^www\./, '');
+      } catch (e) { return url; }
     }
-    function renderTabs() {
-      tabsBar.innerHTML = '';
-      tabs.forEach((tab, idx) => {
-        const tabBtn = document.createElement('button');
-        tabBtn.className = 'tab' + (idx === activeTabIdx ? ' active' : '');
-        tabBtn.textContent = tab.title || tab.url || 'New Tab';
-        tabBtn.onclick = () => switchTab(idx);
-        // Close button
-        const closeBtn = document.createElement('span');
-        closeBtn.className = 'close-btn';
-        closeBtn.textContent = '×';
-        closeBtn.onclick = (e) => { e.stopPropagation(); closeTab(idx); };
-        tabBtn.appendChild(closeBtn);
-        tabsBar.appendChild(tabBtn);
-      });
+    function getLabelForUrl(url) {
+      try {
+        const u = new URL(url);
+        // If path is just "/", show hostname, else show path (e.g. /test-connect.html)
+        if (u.pathname && u.pathname !== "/") {
+          // Show last segment if possible
+          const segments = u.pathname.split('/').filter(Boolean);
+          return segments.length ? segments[segments.length - 1] : u.pathname;
+        }
+        return u.hostname.replace(/^www\./, '');
+      } catch (e) { return url; }
     }
-    function renderRecentSites() {
-      recentSitesList.innerHTML = '';
-      if (recentSites.length === 0) {
-        recentSitesList.innerHTML = '<em>No recent sites</em>';
+    function backToApps() {
+      frame.style.display = 'none';
+      recentApps.style.display = 'flex';
+      backBtn.style.display = 'none';
+      clearBtn.style.display = 'none';
+      showRecentApps();
+    }
+    function showRecentApps() {
+      recentApps.innerHTML = '';
+      const sites = getRecentSites();
+      if (!sites.length) {
+        recentApps.innerHTML = '<div style="padding:2rem;color:#aaa;font-size:1.2rem;">No recent apps</div>';
+        clearBtn.style.display = 'none';
         return;
       }
-      recentSites.forEach(url => {
-        const link = document.createElement('span');
-        link.className = 'recent-site-link';
-        link.textContent = url;
-        link.onclick = () => openUrlInNewTab(url);
-        recentSitesList.appendChild(link);
+      sites.forEach(siteObj => {
+        let url, favicon;
+        if (typeof siteObj === 'string') {
+          url = siteObj;
+          favicon = getFaviconForUrl(url);
+        } else {
+          url = siteObj.url;
+          favicon = siteObj.favicon || getFaviconForUrl(url);
+        }
+        const item = document.createElement('div');
+        item.className = 'recent-app-item';
+        item.title = url;
+        item.onclick = (e) => {
+          e.preventDefault();
+          openApp(url);
+        };
+        const icon = document.createElement('img');
+        icon.className = 'recent-app-icon';
+        icon.src = favicon;
+        icon.onerror = function() { this.src = '/favicon.ico'; };
+        item.appendChild(icon);
+        const label = document.createElement('div');
+        label.className = 'recent-app-label';
+        label.textContent = getLabelForUrl(url);
+        item.appendChild(label);
+        recentApps.appendChild(item);
       });
+      // Show clear history button if there are sites
+      clearBtn.style.display = 'inline-block';
     }
-    function switchTab(idx) {
-      activeTabIdx = idx;
-      saveTabs();
-      showTab();
+    function openApp(url) {
+      input.value = url;
+      frame.src = url;
+      frame.style.display = 'block';
+      recentApps.style.display = 'none';
+      backBtn.style.display = 'inline-block';
+      clearBtn.style.display = 'inline-block';
     }
-    function closeTab(idx) {
-      tabs.splice(idx, 1);
-      if (activeTabIdx >= tabs.length) activeTabIdx = tabs.length - 1;
-      if (tabs.length === 0) {
-        showHome();
-      } else {
-        saveTabs();
-        showTab();
-      }
-    }
-    function openUrlInNewTab(url) {
-      tabs.push({ url, title: url });
-      activeTabIdx = tabs.length - 1;
-      saveTabs();
-      showTab();
-    }
-    function showTab() {
-      if (!tabs.length) return showHome();
-      const tab = tabs[activeTabIdx];
-      input.value = tab.url || '';
-      frame.style.display = '';
-      homeScreen.style.display = 'none';
-      frame.src = tab.url || '';
-      renderTabs();
-    }
-    function showHome() {
-      frame.style.display = 'none';
-      homeScreen.style.display = '';
-      renderTabs();
-      renderRecentSites();
-    }
-    function navigate() {
+    btn.onclick = function() {
       let url = input.value.trim();
       if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
-      if (!tabs.length) {
-        tabs.push({ url, title: url });
-        activeTabIdx = 0;
-      } else {
-        tabs[activeTabIdx].url = url;
-        tabs[activeTabIdx].title = url;
+      openApp(url);
+      // Add to recent sites if not present
+      let sites = getRecentSites();
+      if (!sites.some(site => (typeof site === 'string' ? site === url : site.url === url))) {
+        sites.unshift({ url, favicon: getFaviconForUrl(url) });
+        if (sites.length > 12) sites = sites.slice(0, 12);
+        localStorage.setItem('yoursWalletConnectedSites', JSON.stringify(sites));
       }
-      addRecentSite(url);
-      saveTabs();
-      showTab();
-    }
-    goBtn.onclick = navigate;
-    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') navigate(); });
-    newTabBtn.onclick = function() {
-      tabs.push({ url: '', title: 'New Tab' });
-      activeTabIdx = tabs.length - 1;
-      saveTabs();
-      showTab();
-      setTimeout(() => input.focus(), 100);
     };
-    homeBtn.onclick = function() {
-      showHome();
+    input.addEventListener('keydown', function(e) { if (e.key === 'Enter') btn.onclick(); });
+    backBtn.onclick = backToApps;
+    clearBtn.onclick = function() {
+      localStorage.removeItem('yoursWalletConnectedSites');
+      showRecentApps();
+      clearBtn.style.display = 'none';
     };
-    frame.onload = function() {
-      try {
-        const url = frame.contentWindow.location.href;
-        if (tabs[activeTabIdx]) {
-          tabs[activeTabIdx].url = url;
-          tabs[activeTabIdx].title = url;
-          addRecentSite(url);
-          saveTabs();
-          renderTabs();
-        }
-      } catch (e) {}
-    };
-    // Initial load
-    if (tabs.length) {
-      showTab();
-    } else {
-      showHome();
-    }
+    // On load, open test-connect.html by default
+    window.addEventListener('DOMContentLoaded', function() {
+      const defaultUrl = './test-connect.html';
+      input.value = defaultUrl;
+      frame.src = defaultUrl;
+      frame.style.display = 'block';
+      recentApps.style.display = 'none';
+      backBtn.style.display = 'block';
+      clearBtn.style.display = 'block';
+      // Always show recent apps when going back
+      backBtn.onclick = backToApps;
+      // If user goes back to apps, show recent
+      showRecentApps();
+    });
   </script>
 </body>
 </html>

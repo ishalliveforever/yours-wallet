@@ -178,6 +178,11 @@ export const Settings = () => {
     };
     await chromeStorageService.updateNested(key, update);
     setConnectedApps(newList);
+    // Sync to localStorage for browser hamburger menu
+    localStorage.setItem(
+      'yoursWalletConnectedSites',
+      JSON.stringify(newList.map(app => ({ url: app.domain, favicon: app.icon })))
+    );
   };
 
   const handleDeleteAccountIntent = () => {

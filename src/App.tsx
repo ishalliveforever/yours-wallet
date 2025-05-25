@@ -161,11 +161,10 @@ export const App = () => {
     }
   }, [transferOrdinalRequest, purchaseOrdinalRequest, menuContext]);
 
-  // Listen for CONNECT_REQUEST postMessages and set connectRequest if on /connect
+  // Listen for CONNECT_REQUEST postMessages and set connectRequest for any route
   useEffect(() => {
     function handleConnectMessage(event: MessageEvent) {
       if (
-        window.location.pathname === '/connect' &&
         event.data &&
         typeof event.data === 'object' &&
         event.data.type === 'CONNECT_REQUEST' &&
